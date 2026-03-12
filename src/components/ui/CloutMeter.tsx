@@ -8,9 +8,10 @@ interface CloutMeterProps {
     tier: CloutTier;
     animated?: boolean;
     className?: string;
+    compact?: boolean;
 }
 
-export default function CloutMeter({ score, tier, animated = true, className }: CloutMeterProps) {
+export default function CloutMeter({ score, tier, animated = true, className, compact = false }: CloutMeterProps) {
     const [fillWidth, setFillWidth] = useState(animated ? 0 : Math.min(Math.max(score, 0), 1000) / 10);
 
     useEffect(() => {
@@ -40,13 +41,15 @@ export default function CloutMeter({ score, tier, animated = true, className }: 
 
     return (
         <div className={cn("w-full flex flex-col gap-2 font-barlow", className)}>
-            <div className="relative w-full h-4 bg-[#111] rounded overflow-hidden shadow-inner border border-smoke">
+            <div className={cn("relative w-full bg-[#111] rounded overflow-hidden shadow-inner border border-smoke", compact ? "h-2" : "h-4")}>
                 {/* Tick marks every 10% */}
-                <div className="absolute inset-0 flex justify-between px-[10%] opacity-20 pointer-events-none">
-                    {[...Array(9)].map((_, i) => (
-                        <div key={i} className="w-[1px] h-full bg-white" />
-                    ))}
-                </div>
+                {!compact && (
+                    <div className="absolute inset-0 flex justify-between px-[10%] opacity-20 pointer-events-none">
+                        {[...Array(9)].map((_, i) => (
+                            <div key={i} className="w-[1px] h-full bg-white" />
+                        ))}
+                    </div>
+                )}
 
                 {/* The Fill */}
                 <div
@@ -64,7 +67,7 @@ export default function CloutMeter({ score, tier, animated = true, className }: 
             </div>
             <div className="flex justify-between items-center text-xs tracking-widest uppercase font-bold text-smoke">
                 <span>{tier}</span>
-                <span className="text-white-app">{score} <span className="text-smoke">/ 1000 CLOUT</span></span>
+                <span className="text-white-app">{score} {!compact && <span className="text-smoke">/ 1000 CLOUT</span>}</span>
             </div>
         </div>
     );

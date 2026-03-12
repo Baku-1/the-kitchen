@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
@@ -54,12 +54,39 @@ export async function getUserProfile() {
 
     const supabase = createAdminClient();
 
-    const { data, error } = await supabase
+    // 1. Try to get user from Supabase
+    let { data: profile, error } = await supabase
         .from("users")
         .select("*")
         .eq("clerk_id", userId)
         .single();
 
+    // 2. If user doesn't exist, sync from Clerk JIT (Just-In-Time)
+    if (error && (error.code === 'PGRST116' || !profile)) {
+        const clerkUser = await currentUser();
+        if (!clerkUser) return null;
+
+        const email = clerkUser.emailAddresses[0]?.emailAddress;
+        const initialUsername = clerkUser.username || email?.split('@')[0] || `user_${userId.slice(-6)}`;
+
+        const { data: newProfile, error: insertError } = await supabase
+            .from("users")
+            .insert({
+                clerk_id: userId,
+                username: initialUsername,
+                display_name: clerkUser.firstName ? `${clerkUser.firstName} ${clerkUser.lastName || ""}`.trim() : initialUsername,
+                avatar_url: clerkUser.imageUrl,
+            })
+            .select()
+            .single();
+
+        if (insertError) {
+            console.error("Failed to sync user from Clerk:", insertError);
+            return null;
+        }
+        return newProfile;
+    }
+
     if (error) return null;
-    return data;
+    return profile;
 }
