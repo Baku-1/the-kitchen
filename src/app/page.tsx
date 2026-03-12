@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { auth } from "@clerk/nextjs/server";
 import BattleCard, { BattleData } from "@/components/ui/BattleCard";
 import CloutMeter from "@/components/ui/CloutMeter";
 import { getCloutTier } from "@/lib/utils";
@@ -51,7 +52,10 @@ const MOCK_LEADERBOARD = [
   { rank: 6, name: "Mad Mic", score: 480, record: "7-7" },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const { userId } = await auth();
+  const enterUrl = userId ? "/dashboard" : "/auth";
+
   return (
     <div className="flex-1 w-full bg-char overflow-hidden">
 
@@ -79,7 +83,7 @@ export default function Home() {
 
           <div className="flex flex-col sm:flex-row gap-6 w-full max-w-md">
             <Link
-              href="/auth"
+              href={enterUrl}
               className="flex-1 py-4 bg-ember hover:bg-flame text-white-app font-bebas text-2xl tracking-widest transition-colors clip-angled shadow-[0_4px_20px_rgba(255,69,0,0.4)]"
             >
               ENTER THE KITCHEN

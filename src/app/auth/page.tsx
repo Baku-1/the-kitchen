@@ -1,11 +1,12 @@
 import { SignIn, SignUp } from "@clerk/nextjs";
 
-export default function AuthPage({
+export default async function AuthPage({
     searchParams,
 }: {
-    searchParams: { mode?: string };
+    searchParams: Promise<{ mode?: string }>;
 }) {
-    const isSignIn = searchParams.mode !== "signup";
+    const params = await searchParams;
+    const isSignIn = params.mode !== "signup";
 
     return (
         <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
