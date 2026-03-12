@@ -3,7 +3,7 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Clock, Calendar, Swords, Info } from "lucide-react";
-import SetTimeForm from "./SetTimeForm";
+import SetTimeForm from "@/app/dashboard/set-time/[id]/SetTimeForm";
 
 export default async function SetTimePage({ params }: { params: { id: string } }) {
     const { id } = await params;
