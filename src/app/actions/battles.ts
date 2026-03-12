@@ -147,3 +147,117 @@ export async function castVote(battleId: string, artistId: string) {
     revalidatePath(`/battles/${battleId}`);
     return { success: true };
 }
+
+export async function sendChatMessage(battleId: string, message: string) {
+    const { userId: clerkId } = await auth();
+    if (!clerkId) throw new Error("Log in to join the trenches 🔥");
+
+    const supabase = createAdminClient();
+
+    const { data: profile, error: userError } = await supabase
+        .from("users")
+        .select("id")
+        .eq("clerk_id", clerkId)
+        .single();
+
+    if (userError || !profile) throw new Error("Profile not found");
+
+    const { error } = await supabase
+        .from("chat_messages")
+        .insert({
+            battle_id: battleId,
+            user_id: profile.id,
+            message: message.trim()
+        });
+
+    if (error) throw new Error("Failed to send heat: " + error.message);
+
+    revalidatePath(`/battles/${battleId}`);
+    return { success: true };
+}
+
+export async function finishVoting(battleId: string) {
+    const supabase = createAdminClient();
+    await supabase.from("battles").update({ status: "completed" }).eq("id", battleId);
+    return declareWinner(battleId);
+}
+
+export async function declareWinner(battleId: string) {
+    const supabase = createAdminClient();
+
+    // 1. Fetch battle and vote counts
+    const { data: battle, error: battleError } = await supabase
+        .from("battles")
+        .select("*, artist_a:artist_a_id(*), artist_b:artist_b_id(*)")
+        .eq("id", battleId)
+        .single();
+
+    if (battleError || !battle) throw new Error("Battle not found");
+
+    // 2. Tally votes from the votes table
+    const { count: countA } = await supabase
+        .from("votes")
+        .select("*", { count: 'exact', head: true })
+        .eq("battle_id", battleId)
+        .eq("voted_for_id", battle.artist_a_id);
+
+    const { count: countB } = await supabase
+        .from("votes")
+        .select("*", { count: 'exact', head: true })
+        .eq("battle_id", battleId)
+        .eq("voted_for_id", battle.artist_b_id);
+
+    const finalCountA = countA || 0;
+    const finalCountB = countB || 0;
+
+    let winnerId = null;
+    let loserId = null;
+
+    if (finalCountA > finalCountB) {
+        winnerId = battle.artist_a_id;
+        loserId = battle.artist_b_id;
+    } else if (finalCountB > finalCountA) {
+        winnerId = battle.artist_b_id;
+        loserId = battle.artist_a_id;
+    }
+
+    // 3. Update Battle
+    await supabase
+        .from("battles")
+        .update({
+            status: "completed",
+            winner_id: winnerId,
+            vote_count_a: finalCountA,
+            vote_count_b: finalCountB
+        })
+        .eq("id", battleId);
+
+    // 4. Update Users Stats & Clout
+    if (winnerId && loserId) {
+        const winner = battle.artist_a_id === winnerId ? battle.artist_a : battle.artist_b;
+        const loser = battle.artist_a_id === loserId ? battle.artist_a : battle.artist_b;
+
+        // Winner +50 Clout
+        await supabase.from("users").update({
+            wins: (winner.wins || 0) + 1,
+            clout_score: (winner.clout_score || 0) + 50
+        }).eq("id", winnerId);
+
+        // Loser -20 Clout
+        await supabase.from("users").update({
+            losses: (loser.losses || 0) + 1,
+            clout_score: Math.max((loser.clout_score || 0) - 20, 0)
+        }).eq("id", loserId);
+
+        // Add history
+        await supabase.from("clout_history").insert([
+            { user_id: winnerId, delta: 50, reason: 'win', battle_id: battleId },
+            { user_id: loserId, delta: -20, reason: 'loss', battle_id: battleId }
+        ]);
+    }
+
+    revalidatePath(`/battles/${battleId}`);
+    revalidatePath("/leaderboard");
+    revalidatePath("/dashboard");
+    return { success: true, winnerId };
+}

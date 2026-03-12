@@ -12,61 +12,120 @@ interface CloutMeterProps {
 }
 
 export default function CloutMeter({ score, tier, animated = true, className, compact = false }: CloutMeterProps) {
-    const [fillWidth, setFillWidth] = useState(animated ? 0 : Math.min(Math.max(score, 0), 1000) / 10);
+    const [displayScore, setDisplayScore] = useState(animated ? 0 : score);
+    const [rotation, setRotation] = useState(animated ? -90 : (score / 1000) * 180 - 90);
 
     useEffect(() => {
         if (animated) {
-            const timer = setTimeout(() => {
-                setFillWidth(Math.min(Math.max(score, 0), 1000) / 10);
-            }, 100);
-            return () => clearTimeout(timer);
+            const timeout = setTimeout(() => {
+                setDisplayScore(score);
+                setRotation((score / 1000) * 180 - 90);
+            }, 500);
+            return () => clearTimeout(timeout);
         }
     }, [score, animated]);
 
-    const gradients = {
-        legend: "linear-gradient(90deg, #FF2200, #FF4500, #FF8C00)",
-        established: "linear-gradient(90deg, #CC6600, #FF8C00, #FFB347)",
-        rising: "linear-gradient(90deg, #1D4ED8, #3B82F6, #60A5FA)",
-        newcomer: "linear-gradient(90deg, #444444, #666666, #888888)",
+    const tierColors = {
+        legend: "#FF4500",
+        established: "#FF8C00",
+        rising: "#3B82F6",
+        newcomer: "#666666",
     };
 
-    const glows = {
-        legend: "0 0 12px rgba(255, 69, 0, 0.6)",
-        established: "0 0 12px rgba(255, 140, 0, 0.4)",
-        rising: "0 0 12px rgba(59, 130, 246, 0.4)",
-        newcomer: "none",
-    };
+    const currentColor = tierColors[tier];
+
+    if (compact) {
+        return (
+            <div className={cn("inline-flex flex-col items-center gap-1", className)} role="img" aria-label={`Clout score: ${score}`}>
+                <div className="relative w-12 h-12 flex items-center justify-center">
+                    <svg viewBox="0 0 100 100" className="w-full h-full rotate-[-90deg]">
+                        <circle
+                            cx="50" cy="50" r="40"
+                            fill="none"
+                            stroke="#222"
+                            strokeWidth="10"
+                        />
+                        <circle
+                            cx="50" cy="50" r="40"
+                            fill="none"
+                            stroke={currentColor}
+                            strokeWidth="10"
+                            strokeDasharray="251.32"
+                            strokeDashoffset={251.32 - (displayScore / 1000) * 251.32}
+                            strokeLinecap="round"
+                            className="transition-all duration-1000 ease-out"
+                            style={{ filter: displayScore > 500 ? `drop-shadow(0 0 3px ${currentColor})` : 'none' }}
+                        />
+                    </svg>
+                    <span suppressHydrationWarning className="absolute inset-0 flex items-center justify-center text-[10px] font-bebas text-white-app tracking-tighter">
+                        {displayScore || score}
+                    </span>
+                </div>
+                <span className="text-[8px] font-barlow-condensed text-smoke uppercase tracking-widest font-black leading-none">{tier}</span>
+            </div>
+        );
+    }
 
     return (
-        <div className={cn("w-full flex flex-col gap-2 font-barlow", className)}>
-            <div className={cn(
-                "relative w-full bg-[#111] rounded-[2px] overflow-hidden border border-[#222]",
-                compact ? "h-3" : "h-[20px]"
-            )}>
-                {/* Tick marks every 10% */}
-                <div className="absolute inset-0 flex justify-between px-[10%] opacity-30 pointer-events-none">
-                    {[...Array(9)].map((_, i) => (
-                        <div key={i} className="w-[1px] h-full bg-[#333]" />
-                    ))}
-                </div>
+        <div className={cn("flex flex-col items-center gap-4", className)} role="img" aria-label={`Clout gauge: ${score} (${tier})`}>
+            <div className="relative w-64 h-32 flex items-center justify-center overflow-hidden">
+                <svg viewBox="0 0 200 100" className="w-full h-full">
+                    <defs>
+                        <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor="#444" />
+                            <stop offset="25%" stopColor="#3B82F6" />
+                            <stop offset="50%" stopColor="#FF8C00" />
+                            <stop offset="100%" stopColor="#FF4500" />
+                        </linearGradient>
+                        <filter id="glow">
+                            <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+                            <feMerge>
+                                <feMergeNode in="coloredBlur" />
+                                <feMergeNode in="SourceGraphic" />
+                            </feMerge>
+                        </filter>
+                    </defs>
 
-                {/* The Fill */}
-                <div
-                    className="absolute top-0 left-0 h-full flex justify-end transition-all"
-                    style={{
-                        width: `${fillWidth}%`,
-                        background: gradients[tier],
-                        boxShadow: glows[tier],
-                        transition: animated ? 'width 1.5s cubic-bezier(0.22, 1, 0.36, 1)' : 'none'
-                    }}
-                >
-                    {/* Leading edge bright sliver */}
-                    <div className="w-[2px] h-full bg-white opacity-60 shadow-[0_0_8px_white]"></div>
+                    <path
+                        d="M 20 90 A 80 80 0 0 1 180 90"
+                        fill="none"
+                        stroke="#222"
+                        strokeWidth="12"
+                        strokeLinecap="round"
+                    />
+
+                    <path
+                        suppressHydrationWarning
+                        d="M 20 90 A 80 80 0 0 1 180 90"
+                        fill="none"
+                        stroke="url(#gaugeGradient)"
+                        strokeWidth="12"
+                        strokeLinecap="round"
+                        strokeDasharray="251.32"
+                        strokeDashoffset={251.32 - (displayScore / 1000) * 251.32}
+                        className="transition-all duration-1000 ease-out"
+                        style={{ filter: displayScore > 500 ? 'url(#glow)' : 'none' }}
+                    />
+
+                    <g style={{ transform: `translate(100px, 90px) rotate(${rotation}deg)`, transition: 'transform 1s ease-out' }}>
+                        <path
+                            d="M -2 0 L 0 -85 L 2 0 Z"
+                            fill={currentColor}
+                            style={{ filter: 'drop-shadow(0 0 4px rgba(0,0,0,0.5))' }}
+                        />
+                        <circle r="5" fill="#111" stroke={currentColor} strokeWidth="2" />
+                    </g>
+                </svg>
+
+                <div className="absolute bottom-2 flex flex-col items-center">
+                    <span suppressHydrationWarning className="text-4xl font-bebas text-white-app tracking-widest">{displayScore || score}</span>
+                    <span className="text-[10px] font-barlow-condensed text-smoke uppercase tracking-[0.3em] font-black">{tier}</span>
                 </div>
             </div>
-            <div className="flex justify-between items-center text-xs tracking-widest uppercase font-bold text-smoke">
-                <span className="text-white-app font-bebas text-lg tracking-normal">{score}</span>
-                <span className="text-smoke">/ 1000 CLOUT</span>
+
+            <div className="w-full flex justify-between px-2 text-[10px] font-bebas text-smoke/30 uppercase tracking-widest">
+                <span>NEWCOMER</span>
+                <span>LEGEND</span>
             </div>
         </div>
     );

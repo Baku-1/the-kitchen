@@ -1,8 +1,44 @@
 "use client";
 
-import { Mic2, ShieldCheck, Video, Globe, Send, UserCheck } from "lucide-react";
+import { useState } from "react";
+import { Mic2, ShieldCheck, Video, Globe, Send, UserCheck, CheckCircle, AlertTriangle } from "lucide-react";
+import { submitApplication } from "@/app/actions/applications";
 
 export default function ForArtistsPage() {
+    const [formData, setFormData] = useState({
+        stage_name: "",
+        genre: "Freestyle",
+        location: "",
+        sample_url: "",
+        social_handle: "",
+        bio: ""
+    });
+    const [loading, setLoading] = useState(false);
+    const [status, setStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setStatus(null);
+
+        try {
+            const res = await submitApplication(formData);
+            setStatus({ type: 'success', message: res.message });
+            setFormData({
+                stage_name: "",
+                genre: "Freestyle",
+                location: "",
+                sample_url: "",
+                social_handle: "",
+                bio: ""
+            });
+        } catch (err: any) {
+            setStatus({ type: 'error', message: err.message || "Something went wrong." });
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="flex-1 w-full bg-char min-h-screen pb-24">
             {/* Header */}
@@ -72,73 +108,120 @@ export default function ForArtistsPage() {
                         APPLICATION PORTAL
                     </div>
 
-                    <form className="flex flex-col gap-8 mt-4" onSubmit={(e) => e.preventDefault()}>
-                        <div className="space-y-2">
-                            <label className="text-xs font-barlow-condensed text-smoke uppercase tracking-widest">Artist Stage Name</label>
-                            <input
-                                type="text"
-                                placeholder="e.g. MC GHOST"
-                                className="w-full bg-char border border-smoke p-4 focus:border-ember outline-none text-white-app transition-colors font-bebas text-xl tracking-wider"
-                            />
+                    {status ? (
+                        <div className={cn(
+                            "flex flex-col items-center justify-center text-center p-12 h-full gap-6 animate-fade-in",
+                            status.type === 'success' ? "bg-ember/10 border border-ember" : "bg-flame/10 border border-flame"
+                        )}>
+                            {status.type === 'success' ? (
+                                <CheckCircle className="w-20 h-20 text-ember" />
+                            ) : (
+                                <AlertTriangle className="w-20 h-20 text-flame" />
+                            )}
+                            <h2 className="text-4xl font-bebas text-white-app tracking-widest uppercase">
+                                {status.type === 'success' ? "APPLICATION RECEIVED" : "ERROR OCCURRED"}
+                            </h2>
+                            <p className="text-smoke font-barlow italic">
+                                {status.message}
+                            </p>
+                            <button
+                                onClick={() => setStatus(null)}
+                                className="mt-8 px-8 py-3 bg-char border border-smoke text-white-app font-bebas text-xl tracking-widest hover:border-ember transition-all uppercase"
+                            >
+                                BACK TO FORM
+                            </button>
                         </div>
-
-                        <div className="grid grid-cols-2 gap-6">
+                    ) : (
+                        <form className="flex flex-col gap-8 mt-4" onSubmit={handleSubmit}>
                             <div className="space-y-2">
-                                <label className="text-xs font-barlow-condensed text-smoke uppercase tracking-widest">Primary Genre</label>
-                                <select className="w-full bg-char border border-smoke p-4 focus:border-ember outline-none text-white-app transition-colors font-barlow uppercase text-sm tracking-widest">
-                                    <option>Freestyle</option>
-                                    <option>Written</option>
-                                    <option>Melodic</option>
-                                    <option>Drill</option>
-                                </select>
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-xs font-barlow-condensed text-smoke uppercase tracking-widest">Location</label>
+                                <label className="text-xs font-barlow-condensed text-smoke uppercase tracking-widest">Artist Stage Name</label>
                                 <input
+                                    required
                                     type="text"
-                                    placeholder="City, State/Country"
+                                    placeholder="e.g. MC GHOST"
+                                    value={formData.stage_name}
+                                    onChange={e => setFormData(prev => ({ ...prev, stage_name: e.target.value }))}
+                                    className="w-full bg-char border border-smoke p-4 focus:border-ember outline-none text-white-app transition-colors font-bebas text-xl tracking-wider"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-barlow-condensed text-smoke uppercase tracking-widest">Primary Genre</label>
+                                    <select
+                                        className="w-full bg-char border border-smoke p-4 focus:border-ember outline-none text-white-app transition-colors font-barlow uppercase text-sm tracking-widest"
+                                        value={formData.genre}
+                                        onChange={e => setFormData(prev => ({ ...prev, genre: e.target.value }))}
+                                    >
+                                        <option>Freestyle</option>
+                                        <option>Written</option>
+                                        <option>Melodic</option>
+                                        <option>Drill</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-barlow-condensed text-smoke uppercase tracking-widest">Location</label>
+                                    <input
+                                        required
+                                        type="text"
+                                        placeholder="City, State/Country"
+                                        value={formData.location}
+                                        onChange={e => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                                        className="w-full bg-char border border-smoke p-4 focus:border-ember outline-none text-white-app transition-colors font-barlow text-sm"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-barlow-condensed text-smoke uppercase tracking-widest">Sample Audio/Video Link (YouTube, SoundCloud, etc.)</label>
+                                <input
+                                    required
+                                    type="url"
+                                    placeholder="https://..."
+                                    value={formData.sample_url}
+                                    onChange={e => setFormData(prev => ({ ...prev, sample_url: e.target.value }))}
                                     className="w-full bg-char border border-smoke p-4 focus:border-ember outline-none text-white-app transition-colors font-barlow text-sm"
                                 />
                             </div>
-                        </div>
 
-                        <div className="space-y-2">
-                            <label className="text-xs font-barlow-condensed text-smoke uppercase tracking-widest">Sample Audio/Video Link (YouTube, SoundCloud, etc.)</label>
-                            <input
-                                type="url"
-                                placeholder="https://..."
-                                className="w-full bg-char border border-smoke p-4 focus:border-ember outline-none text-white-app transition-colors font-barlow text-sm"
-                            />
-                        </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-barlow-condensed text-smoke uppercase tracking-widest">Social Media Handle (@instagram / @x)</label>
+                                <input
+                                    required
+                                    type="text"
+                                    placeholder="@username"
+                                    value={formData.social_handle}
+                                    onChange={e => setFormData(prev => ({ ...prev, social_handle: e.target.value }))}
+                                    className="w-full bg-char border border-smoke p-4 focus:border-ember outline-none text-white-app transition-colors font-barlow text-sm"
+                                />
+                            </div>
 
-                        <div className="space-y-2">
-                            <label className="text-xs font-barlow-condensed text-smoke uppercase tracking-widest">Social Media Handle (@instagram / @x)</label>
-                            <input
-                                type="text"
-                                placeholder="@username"
-                                className="w-full bg-char border border-smoke p-4 focus:border-ember outline-none text-white-app transition-colors font-barlow text-sm"
-                            />
-                        </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-barlow-condensed text-smoke uppercase tracking-widest">Brief Bio / Accolades</label>
+                                <textarea
+                                    required
+                                    rows={4}
+                                    placeholder="Tell the Kitchen why you belong on the stove."
+                                    value={formData.bio}
+                                    onChange={e => setFormData(prev => ({ ...prev, bio: e.target.value }))}
+                                    className="w-full bg-char border border-smoke p-4 focus:border-ember outline-none text-white-app transition-colors font-barlow text-sm resize-none"
+                                ></textarea>
+                            </div>
 
-                        <div className="space-y-2">
-                            <label className="text-xs font-barlow-condensed text-smoke uppercase tracking-widest">Brief Bio / Accolades</label>
-                            <textarea
-                                rows={4}
-                                placeholder="Tell the Kitchen why you belong on the stove."
-                                className="w-full bg-char border border-smoke p-4 focus:border-ember outline-none text-white-app transition-colors font-barlow text-sm resize-none"
-                            ></textarea>
-                        </div>
-
-                        <button
-                            type="button"
-                            className="w-full py-5 bg-ember hover:bg-flame text-white-app font-bebas text-2xl tracking-widest flex items-center justify-center gap-3 transition-all clip-angled shadow-[0_4px_20px_rgba(255,69,0,0.3)] hover:shadow-[0_4px_30px_rgba(255,69,0,0.5)] active:scale-95"
-                        >
-                            SUBMIT APPLICATION <Send className="w-6 h-6" />
-                        </button>
-                    </form>
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full py-5 bg-ember hover:bg-flame disabled:bg-smoke/20 text-white-app font-bebas text-2xl tracking-widest flex items-center justify-center gap-3 transition-all clip-angled shadow-[0_4px_20px_rgba(255,69,0,0.3)] hover:shadow-[0_4px_30px_rgba(255,69,0,0.5)] active:scale-95"
+                            >
+                                {loading ? "SUBMITTING..." : "SUBMIT APPLICATION"} <Send className="w-6 h-6" />
+                            </button>
+                        </form>
+                    )}
                 </div>
 
             </div>
         </div>
     );
 }
+
+import { cn } from "@/lib/utils";

@@ -1,32 +1,72 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { supabase } from "@/lib/supabase/client";
 
-export default function CrowdEnergyBar({ battleId }: { battleId: string }) {
+export default function CrowdEnergyBar({ battleId, isCompleted = false }: { battleId: string, isCompleted?: boolean }) {
     const [energy, setEnergy] = useState(30);
+    const [maxEnergy, setMaxEnergy] = useState(30);
+    const decayTimer = useRef<NodeJS.Timeout | null>(null);
 
-    // Mocking real-time chat velocity changing the energy bar
     useEffect(() => {
+        // Subscribe to real-time chat messages
+        const channel = supabase
+            .channel(`battle_chat_${battleId}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'chat_messages',
+                    filter: `battle_id=eq.${battleId}`
+                },
+                () => {
+                    setEnergy(prev => {
+                        const newEnergy = Math.min(prev + 8, 100);
+                        if (newEnergy > maxEnergy) setMaxEnergy(newEnergy);
+                        return newEnergy;
+                    });
+                }
+            )
+            .subscribe();
+
+        // Decay logic: slowly drop energy over time
         const interval = setInterval(() => {
-            setEnergy(prev => {
-                // Randomly fluctuate between 20% and 90%
-                const jump = Math.floor(Math.random() * 20) - 10;
-                return Math.min(Math.max(prev + jump, 10), 95);
-            });
-        }, 2000);
-        return () => clearInterval(interval);
-    }, []);
+            setEnergy(prev => Math.max(prev - 1, 15));
+        }, 1000);
+
+        return () => {
+            supabase.removeChannel(channel);
+            clearInterval(interval);
+        };
+    }, [battleId, maxEnergy]);
 
     return (
-        <div className="w-full flex items-center justify-between px-4 py-2 bg-char border-b border-t border-smoke">
-            <span className="text-smoke font-bebas tracking-wide w-24">CROWD ENERGY</span>
-            <div className="flex-1 mx-4 h-3 bg-[#111] rounded-full overflow-hidden border border-smoke/50 relative shadow-inner">
-                <div
-                    className="absolute top-0 left-0 h-full bg-gradient-to-r from-ember via-flame to-heat shadow-[0_0_10px_rgba(255,69,0,0.8)] transition-all duration-1000 ease-in-out"
-                    style={{ width: `${energy}%` }}
-                />
+        <div className="w-full flex-col bg-char border-b border-t border-smoke">
+            <div className="w-full flex items-center justify-between px-4 py-2">
+                <span className="text-smoke font-bebas tracking-wide w-24">CROWD ENERGY</span>
+                <div className="flex-1 mx-4 h-3 bg-[#111] rounded-full overflow-hidden border border-smoke/50 relative shadow-inner">
+                    <div
+                        className="absolute top-0 left-0 h-full bg-gradient-to-r from-ember via-flame to-heat shadow-[0_0_15px_rgba(255,69,0,0.8)] transition-all duration-300 ease-out"
+                        style={{ width: `${energy}%` }}
+                    />
+                    {/* Max Energy Marker */}
+                    <div
+                        className="absolute top-0 h-full w-[2px] bg-white opacity-20 shadow-[0_0_10px_white] transition-all duration-1000"
+                        style={{ left: `${maxEnergy}%` }}
+                    />
+                </div>
+                <div className="flex items-center gap-3 w-16 justify-end">
+                    <span className="text-ember font-bebas tracking-wide text-xl">{energy}%</span>
+                </div>
             </div>
-            <span className="text-ember font-bebas tracking-wide w-12 text-right">{energy}%</span>
+
+            {isCompleted && (
+                <div className="bg-ash/50 py-1 px-4 border-t border-smoke/30 flex justify-center items-center gap-2 animate-pulse">
+                    <span className="text-[10px] font-black text-smoke uppercase tracking-tight">MATCH PEAK HEAT:</span>
+                    <span className="text-ember font-bebas text-lg tracking-widest">{maxEnergy}% — 🔥 SCORCHING!</span>
+                </div>
+            )}
         </div>
     );
 }

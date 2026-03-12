@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getCloutTier, getTierColor } from "@/lib/utils";
 import { User } from "lucide-react";
+import CloutMeter from "@/components/ui/CloutMeter";
 
 interface ArtistCardProps {
     artist: {
@@ -63,9 +64,8 @@ export default function ArtistCard({ artist }: ArtistCardProps) {
                             <span className="text-sm text-white-app font-medium capitalize">{artist.genre || 'Various'}</span>
                         </div>
                         <div className="w-px h-6 bg-white/10" />
-                        <div className="flex flex-col">
-                            <span className="text-[10px] text-smoke/50 uppercase font-bold tracking-tighter">Clout</span>
-                            <span className="text-sm text-ember font-bold">{cloutScore}</span>
+                        <div className="flex flex-col items-center">
+                            <CloutMeter score={cloutScore} tier={tier} compact />
                         </div>
                     </div>
                 </div>

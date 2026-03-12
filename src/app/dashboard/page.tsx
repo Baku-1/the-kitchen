@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Swords, Calendar, Trophy, Zap, AlertCircle, Clock } from "lucide-react";
 import CloutMeter from "@/components/ui/CloutMeter";
+import AdminTrigger from "@/components/dashboard/AdminTrigger";
 import { getCloutTier } from "@/lib/utils";
 
 export default async function DashboardPage() {
@@ -34,14 +35,15 @@ export default async function DashboardPage() {
         .eq("status", "pending")
         .order("created_at", { ascending: false });
 
-    // 3. Fetch Upcoming Accepted Battles
+    // 3. Fetch Upcoming Accepted Battles (Both as A or B)
     const { data: upcoming, error: upcomingError } = await supabase
         .from("battles")
         .select(`
             *,
-            opponent:artist_b_id (username, display_name)
+            artist_a:artist_a_id (username, display_name),
+            artist_b:artist_b_id (username, display_name)
         `)
-        .eq("artist_a_id", profile.id)
+        .or(`artist_a_id.eq.${profile.id},artist_b_id.eq.${profile.id}`)
         .eq("status", "accepted")
         .order("scheduled_at", { ascending: true });
 
@@ -136,20 +138,27 @@ export default async function DashboardPage() {
                         </h2>
                         {upcoming && upcoming.length > 0 ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {upcoming.map((u: any) => (
-                                    <div key={u.id} className="bg-char border border-smoke p-5 flex flex-col gap-3">
-                                        <div className="flex justify-between items-start">
-                                            <span className="text-xs font-bebas tracking-widest text-ember uppercase bg-ember/10 px-2 py-0.5">LOCKED</span>
-                                            <span className="text-xs font-barlow text-smoke italic">VS @{u.opponent?.username}</span>
+                                {upcoming.map((u: any) => {
+                                    const opponent = u.artist_a_id === profile.id ? u.artist_b : u.artist_a;
+                                    const date = u.scheduled_at ? new Date(u.scheduled_at) : null;
+                                    return (
+                                        <div key={u.id} className="bg-char border border-smoke p-5 flex flex-col gap-3">
+                                            <div className="flex justify-between items-start">
+                                                <span className="text-xs font-bebas tracking-widest text-ember uppercase bg-ember/10 px-2 py-0.5">LOCKED</span>
+                                                <span className="text-xs font-barlow text-smoke italic">VS @{opponent?.username}</span>
+                                            </div>
+                                            <div className="text-2xl font-bebas text-white-app leading-tight truncate">
+                                                {u.title || "UNNAMED CLASH"}
+                                            </div>
+                                            <div className="text-sm font-barlow text-smoke flex items-center gap-2">
+                                                <Clock className="w-4 h-4 text-heat" />
+                                                {date && date.getFullYear() > 2000
+                                                    ? date.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })
+                                                    : "TIME NOT SET"}
+                                            </div>
                                         </div>
-                                        <div className="text-2xl font-bebas text-white-app leading-tight truncate">
-                                            {u.title || "UNNAMED CLASH"}
-                                        </div>
-                                        <div className="text-sm font-barlow text-smoke flex items-center gap-2">
-                                            <Clock className="w-4 h-4 text-heat" /> {new Date(u.scheduled_at).toLocaleString()}
-                                        </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         ) : (
                             <div className="border border-smoke border-dashed p-12 text-center text-smoke font-barlow italic">
@@ -167,7 +176,7 @@ export default async function DashboardPage() {
                             <Trophy className="w-32 h-32" />
                         </div>
                         <h3 className="text-2xl font-bebas text-white-app mb-6 tracking-wide">CLOUT LEVEL</h3>
-                        <CloutMeter score={profile.clout_score} tier={tier} className="mb-8" compact />
+                        <CloutMeter score={profile.clout_score} tier={tier} className="mb-8" />
                         <Link href="/leaderboard" className="text-xs text-ember hover:underline font-bebas tracking-[0.2em] uppercase">VIEW GLOBAL RANKINGS &rarr;</Link>
                     </div>
 

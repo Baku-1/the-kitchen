@@ -2,6 +2,9 @@ import { auth } from "@clerk/nextjs/server";
 import { Users, Info, Flag, Calendar, Mic2 } from "lucide-react";
 import VoteUI from "@/components/ui/VoteUI";
 import CrowdEnergyBar from "@/components/ui/CrowdEnergyBar";
+import BattleChat from "@/components/battles/BattleChat";
+import VoteButton from "@/components/battles/VoteButton";
+import CloutMeter from "@/components/ui/CloutMeter";
 import { getCloutTier } from "@/lib/utils";
 import { createAdminClient } from "@/lib/supabase/server";
 import { format } from "date-fns";
@@ -11,6 +14,8 @@ export default async function BattlePage({ params }: { params: { id: string } })
     const { id } = await params;
     const supabase = createAdminClient();
     const { userId: clerkId } = await auth();
+
+    console.log(`[BattlePage] Loading ${id}...`);
 
     // 1. Fetch real battle data
     // Supporting short IDs by checking if it's a UUID or a fragment
@@ -40,6 +45,8 @@ export default async function BattlePage({ params }: { params: { id: string } })
     const artistB = battle.artist_b as any;
     const state = battle.status;
 
+    console.log(`[BattlePage] State: ${state}`, { artistA: artistA?.display_name, artistB: artistB?.display_name });
+
     // 2. Fetch voter status if logged in
     let hasVotedForId = null;
     if (clerkId) {
@@ -63,6 +70,17 @@ export default async function BattlePage({ params }: { params: { id: string } })
         total: totalVotes
     };
 
+    // 3. Fetch Initial Chat Messages
+    const { data: initialMessages } = await supabase
+        .from("chat_messages")
+        .select(`
+            *,
+            user:user_id (username, display_name)
+        `)
+        .eq("battle_id", battle.id)
+        .order("created_at", { ascending: true })
+        .limit(50);
+
     return (
         <div className="flex-1 flex flex-col w-full bg-char overflow-hidden">
             {/* Header */}
@@ -84,7 +102,8 @@ export default async function BattlePage({ params }: { params: { id: string } })
                 </div>
             </div>
 
-            {state === "live" && <CrowdEnergyBar battleId={battle.id} />}
+            {/* Energy Bar (Now Real-time) */}
+            <CrowdEnergyBar battleId={battle.id} isCompleted={state === "completed"} />
 
             <div className="flex-1 flex flex-col lg:flex-row h-full overflow-hidden">
                 {/* Main Stage */}
@@ -118,15 +137,16 @@ export default async function BattlePage({ params }: { params: { id: string } })
                         </div>
                     )}
 
-                    {(state === "voting" || state === "completed") && (
-                        <div className="absolute bottom-0 left-0 w-full z-40 bg-char/95 backdrop-blur-xl border-t border-ember/30 pb-12">
+                    {(state === "live" || state === "voting" || state === "completed") && (
+                        <div className="w-full z-40 bg-char border-t border-ember/30 py-12 px-4 shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
                             <VoteUI
                                 battleId={battle.id}
-                                artistA={artistA}
-                                artistB={artistB}
+                                artistA={{ id: artistA.id, name: artistA.display_name }}
+                                artistB={{ id: artistB.id, name: artistB.display_name }}
                                 results={results}
                                 votedForId={hasVotedForId}
                                 isCompleted={state === "completed"}
+                                winnerId={battle.winner_id}
                             />
                         </div>
                     )}
@@ -149,7 +169,7 @@ export default async function BattlePage({ params }: { params: { id: string } })
                     )}
 
                     {/* Split View Streams */}
-                    <div className="w-full h-full flex flex-col md:flex-row">
+                    <div className="w-full min-h-[500px] flex-1 flex flex-col md:flex-row">
                         <div className="flex-1 relative border-r border-[#111] overflow-hidden group">
                             <div className="absolute inset-0 bg-ash/20 flex items-center justify-center">
                                 <Mic2 className="w-64 h-64 text-smoke/5 opacity-10 absolute -rotate-12" />
@@ -160,75 +180,63 @@ export default async function BattlePage({ params }: { params: { id: string } })
                                     <span className="text-3xl font-bebas text-white-app tracking-wide">{artistA.display_name}</span>
                                     {state === "live" && <span className="px-2 py-0.5 bg-ember text-[8px] font-black italic rounded-sm animate-pulse">LIVE</span>}
                                 </div>
-                                <div className="font-barlow-condensed text-smoke text-[10px] uppercase font-black tracking-[0.2em]">
-                                    {artistA.wins}W - {artistA.losses}L &bull; {artistA.clout_score} CLOUT
+                                <div className="flex items-center gap-4 mt-2">
+                                    <div className="flex flex-col items-start">
+                                        <span className="text-[10px] text-smoke font-black uppercase tracking-widest">{artistA.wins}W - {artistA.losses}L</span>
+                                    </div>
+                                    <CloutMeter score={artistA.clout_score} tier={getCloutTier(artistA.clout_score)} compact />
                                 </div>
                             </div>
+
+                            {/* Integrated Vote Button A */}
+                            {(state === "live" || state === "voting") && !hasVotedForId && (
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 transition-all">
+                                    <VoteButton
+                                        battleId={battle.id}
+                                        artistId={artistA.id}
+                                        artistName={artistA.display_name}
+                                    />
+                                </div>
+                            )}
                         </div>
                         <div className="flex-1 relative overflow-hidden group">
                             <div className="absolute inset-0 bg-ash/20 flex items-center justify-center">
                                 <Mic2 className="w-64 h-64 text-smoke/5 opacity-10 absolute rotate-12" />
-                                <div className="text-[20rem] font-bebas text-smoke/5 pointer-events-none select-none italic">{artistB.display_name[0]}</div>
+                                <div className="text-[20rem] font-bebas text-smoke/5 pointer-events-none select-none italic">{artistB.display_name?.[0]}</div>
                             </div>
                             <div className="absolute bottom-6 right-6 text-right p-4 bg-char/80 backdrop-blur border border-smoke shadow-2xl z-20">
                                 <div className="flex items-center justify-end gap-3 mb-1">
                                     {state === "live" && <span className="px-2 py-0.5 bg-ember text-[8px] font-black italic rounded-sm animate-pulse">LIVE</span>}
                                     <span className="text-3xl font-bebas text-white-app tracking-wide">{artistB.display_name}</span>
                                 </div>
-                                <div className="font-barlow-condensed text-smoke text-[10px] uppercase font-black tracking-[0.2em]">
-                                    {artistB.wins}W - {artistB.losses}L &bull; {artistB.clout_score} CLOUT
+                                <div className="flex items-center justify-end gap-4 mt-2">
+                                    <CloutMeter score={artistB.clout_score} tier={getCloutTier(artistB.clout_score)} compact />
+                                    <div className="flex flex-col items-end">
+                                        <span className="text-[10px] text-smoke font-black uppercase tracking-widest">{artistB.wins}W - {artistB.losses}L</span>
+                                    </div>
                                 </div>
                             </div>
+
+                            {/* Integrated Vote Button B */}
+                            {(state === "live" || state === "voting") && !hasVotedForId && (
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 transition-all">
+                                    <VoteButton
+                                        battleId={battle.id}
+                                        artistId={artistB.id}
+                                        artistName={artistB.display_name}
+                                    />
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
 
-                {/* Sidebar Chat */}
-                <div className="w-full lg:w-96 border-l border-smoke bg-ash flex flex-col h-[50vh] lg:h-auto z-50">
-                    <div className="p-4 border-b border-smoke bg-char flex items-center justify-between">
-                        <span className="font-bebas text-2xl text-white-app tracking-widest uppercase italic">The Trenches</span>
-                        <div className="flex gap-2">
-                            <div className="w-2 h-2 rounded-full bg-ember animate-ping"></div>
-                            <span className="text-[10px] text-smoke font-black uppercase tracking-widest">Live Flow</span>
-                        </div>
-                    </div>
-                    <div className="flex-1 p-6 overflow-y-auto flex flex-col gap-4 font-barlow text-sm scrollbar-thin scrollbar-thumb-smoke/20">
-                        {state === "upcoming" ? (
-                            <div className="h-full flex flex-col items-center justify-center text-center opacity-30">
-                                <Info className="w-12 h-12 mb-4" />
-                                <p className="font-bebas text-2xl tracking-widest">Chat Locked</p>
-                                <p className="text-[10px] uppercase font-bold tracking-widest">Opens when the heat rises</p>
-                            </div>
-                        ) : (
-                            <div className="space-y-4">
-                                <div className="bg-char/40 p-3 border-l-2 border-ember">
-                                    <span className="font-black text-ember text-[10px] block mb-1 uppercase tracking-tighter">System Alert</span>
-                                    <p className="text-smoke italic text-xs">Battle is live. No gang references. No personal threats. Spitting bars only.</p>
-                                </div>
-                                {/* Mock Messages */}
-                                <div className="flex flex-col gap-1">
-                                    <span className="font-black text-heat text-[10px] uppercase">nyc_beast</span>
-                                    <p className="text-smoke">mad mic came for the crown tonight 😤</p>
-                                </div>
-                                <div className="flex flex-col gap-1">
-                                    <span className="font-black text-ember text-[10px] uppercase">detroit_chef</span>
-                                    <p className="text-smoke">flowking 3-0 zero debate</p>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                    <div className="p-6 border-t border-smoke bg-char">
-                        <div className="flex text-smoke font-barlow bg-ash/50 border border-smoke p-1 relative overflow-hidden group focus-within:border-ember transition-all">
-                            <input
-                                type="text"
-                                disabled={state === "upcoming"}
-                                placeholder={state === "upcoming" ? "LOCKED" : "SEND HEAT..."}
-                                className="w-full bg-transparent p-4 outline-none font-bold placeholder:text-smoke/30 italic uppercase text-xs"
-                                maxLength={100}
-                            />
-                        </div>
-                    </div>
-                </div>
+                {/* Sidebar Chat (Now Client Component) */}
+                <BattleChat
+                    battleId={battle.id}
+                    initialMessages={initialMessages || []}
+                    isLocked={state === "upcoming"}
+                />
             </div>
         </div>
     );
