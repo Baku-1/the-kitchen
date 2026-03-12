@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Calendar, Video } from "lucide-react";
+import { addToGoogleCalendar } from "@/lib/calendar";
 
 export interface ArtistData {
     username: string;
@@ -85,9 +88,19 @@ export default function BattleCard({ battle, variant = "row" }: { battle: Battle
                                 >
                                     BATTLE DETAILS
                                 </Link>
-                                <button className="px-6 py-3 bg-smoke/30 hover:bg-smoke text-smoke hover:text-white-app font-bebas text-xl tracking-wider clip-angled transition-colors flex items-center gap-2">
-                                    <Calendar className="w-5 h-5" /> ADD TO CALENDAR
-                                </button>
+                                <div className="flex">
+                                    <button
+                                        onClick={() => addToGoogleCalendar({
+                                            id: battle.id,
+                                            artist_a_name: battle.artist_a.display_name,
+                                            artist_b_name: battle.artist_b.display_name,
+                                            scheduled_at: battle.scheduled_at
+                                        })}
+                                        className="px-6 py-3 bg-smoke/30 hover:bg-smoke text-smoke hover:text-white-app font-bebas text-xl tracking-wider clip-angled transition-colors flex items-center gap-2"
+                                    >
+                                        <Calendar className="w-5 h-5" /> ADD TO CALENDAR
+                                    </button>
+                                </div>
                             </>
                         )}
                     </div>

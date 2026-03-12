@@ -79,12 +79,12 @@ export default async function ArtistProfilePage({ params }: { params: { username
                                     <Share2 className="w-5 h-5" />
                                 </button>
                                 <Link href={`/challenge?to=${artist.username}`} className="h-12 px-6 flex items-center gap-2 bg-ember hover:bg-flame text-white-app font-bebas text-xl tracking-wider transition-colors clip-angled shadow-[0_5px_15px_rgba(255,69,0,0.3)]">
-                                    <Swords className="w-5 h-5" /> CHALLENGE THE CHEF
+                                    <Swords className="w-5 h-5" /> CHALLENGE THIS ARTIST
                                 </Link>
                             </div>
                         </div>
 
-                        <p className="text-smoke text-lg font-barlow max-w-2xl">{artist.bio || "This artist hasn't written their manifesto yet."}</p>
+                        <p className="text-smoke text-lg font-barlow max-w-2xl">{artist.bio || "No bio yet."}</p>
                     </div>
                 </div>
 
@@ -147,8 +147,20 @@ export default async function ArtistProfilePage({ params }: { params: { username
                                 ))}
                             </div>
                         ) : (
-                            <div className="border border-smoke border-dashed p-8 text-center text-smoke font-barlow italic">
-                                The kitchen remains unturned.
+                            <div className="border border-smoke border-dashed p-12 text-center flex flex-col items-center group">
+                                <div className="w-16 h-16 bg-char border border-smoke flex items-center justify-center rounded-full mb-4 text-smoke group-hover:text-ember transition-colors">
+                                    <Swords className="w-8 h-8" />
+                                </div>
+                                <h3 className="text-2xl font-bebas text-white-app mb-1 uppercase tracking-wide">No battles yet</h3>
+                                <p className="text-smoke font-barlow mb-8 max-w-[200px] mx-auto uppercase text-xs tracking-tighter">
+                                    This artist hasn't stepped into the kitchen.
+                                </p>
+                                <Link
+                                    href={`/challenge?to=${artist.username}`}
+                                    className="px-6 py-2 bg-char border border-ember text-ember hover:bg-ember hover:text-white-app font-bebas text-lg tracking-widest transition-all clip-angled"
+                                >
+                                    CHALLENGE {artist.display_name || artist.username}
+                                </Link>
                             </div>
                         )}
                     </section>

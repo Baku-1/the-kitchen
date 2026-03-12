@@ -16,7 +16,6 @@ export default function CloutMeter({ score, tier, animated = true, className, co
 
     useEffect(() => {
         if (animated) {
-            // Small delay to ensure the browser paints the 0% state first before animating
             const timer = setTimeout(() => {
                 setFillWidth(Math.min(Math.max(score, 0), 1000) / 10);
             }, 100);
@@ -24,7 +23,6 @@ export default function CloutMeter({ score, tier, animated = true, className, co
         }
     }, [score, animated]);
 
-    // Determine gradient based on tier
     const gradients = {
         legend: "linear-gradient(90deg, #FF2200, #FF4500, #FF8C00)",
         established: "linear-gradient(90deg, #CC6600, #FF8C00, #FFB347)",
@@ -33,27 +31,28 @@ export default function CloutMeter({ score, tier, animated = true, className, co
     };
 
     const glows = {
-        legend: "0 0 15px rgba(255, 69, 0, 0.5)",
-        established: "0 0 15px rgba(255, 179, 71, 0.5)",
-        rising: "0 0 15px rgba(59, 130, 246, 0.5)",
-        newcomer: "0 0 10px rgba(136, 136, 136, 0.3)",
+        legend: "0 0 12px rgba(255, 69, 0, 0.6)",
+        established: "0 0 12px rgba(255, 140, 0, 0.4)",
+        rising: "0 0 12px rgba(59, 130, 246, 0.4)",
+        newcomer: "none",
     };
 
     return (
         <div className={cn("w-full flex flex-col gap-2 font-barlow", className)}>
-            <div className={cn("relative w-full bg-[#111] rounded overflow-hidden shadow-inner border border-smoke", compact ? "h-2" : "h-4")}>
+            <div className={cn(
+                "relative w-full bg-[#111] rounded-[2px] overflow-hidden border border-[#222]",
+                compact ? "h-3" : "h-[20px]"
+            )}>
                 {/* Tick marks every 10% */}
-                {!compact && (
-                    <div className="absolute inset-0 flex justify-between px-[10%] opacity-20 pointer-events-none">
-                        {[...Array(9)].map((_, i) => (
-                            <div key={i} className="w-[1px] h-full bg-white" />
-                        ))}
-                    </div>
-                )}
+                <div className="absolute inset-0 flex justify-between px-[10%] opacity-30 pointer-events-none">
+                    {[...Array(9)].map((_, i) => (
+                        <div key={i} className="w-[1px] h-full bg-[#333]" />
+                    ))}
+                </div>
 
                 {/* The Fill */}
                 <div
-                    className="absolute top-0 left-0 h-full flex justify-end"
+                    className="absolute top-0 left-0 h-full flex justify-end transition-all"
                     style={{
                         width: `${fillWidth}%`,
                         background: gradients[tier],
@@ -62,12 +61,12 @@ export default function CloutMeter({ score, tier, animated = true, className, co
                     }}
                 >
                     {/* Leading edge bright sliver */}
-                    <div className="w-1 h-full bg-white opacity-80 mix-blend-overlay"></div>
+                    <div className="w-[2px] h-full bg-white opacity-60 shadow-[0_0_8px_white]"></div>
                 </div>
             </div>
             <div className="flex justify-between items-center text-xs tracking-widest uppercase font-bold text-smoke">
-                <span>{tier}</span>
-                <span className="text-white-app">{score} {!compact && <span className="text-smoke">/ 1000 CLOUT</span>}</span>
+                <span className="text-white-app font-bebas text-lg tracking-normal">{score}</span>
+                <span className="text-smoke">/ 1000 CLOUT</span>
             </div>
         </div>
     );

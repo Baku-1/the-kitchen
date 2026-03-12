@@ -1,141 +1,229 @@
-import Link from "next/link";
-import { Users, Info, Flag } from "lucide-react";
+import { auth } from "@clerk/nextjs/server";
+import { Users, Info, Flag, Calendar, Mic2 } from "lucide-react";
 import VoteUI from "@/components/ui/VoteUI";
 import CrowdEnergyBar from "@/components/ui/CrowdEnergyBar";
 import { getCloutTier } from "@/lib/utils";
+import { createAdminClient } from "@/lib/supabase/server";
+import { format } from "date-fns";
+import { addToGoogleCalendar } from "@/lib/calendar";
 
-// In a real app we would use @livekit/components-react to render tracks
-// e.g. <LiveKitRoom><VideoTrack /></LiveKitRoom>
-
-export default async function BattlePage({ params, searchParams }: { params: { id: string }, searchParams: { state?: string } }) {
+export default async function BattlePage({ params }: { params: { id: string } }) {
     const { id } = await params;
+    const supabase = createAdminClient();
+    const { userId: clerkId } = await auth();
 
-    // Use a query parameter ?state=upcoming|live|voting|completed to see different states for demo
-    const state = searchParams.state || "live";
+    // 1. Fetch real battle data
+    // Supporting short IDs by checking if it's a UUID or a fragment
+    let query = supabase
+        .from("battles")
+        .select(`
+            *,
+            artist_a:artist_a_id (id, username, display_name, clout_score, wins, losses),
+            artist_b:artist_b_id (id, username, display_name, clout_score, wins, losses)
+        `);
 
-    const artistA = { id: "a1", name: "FlowKing", city: "Detroit", clout_score: 520, record: "9-5", avatar: "F" };
-    const artistB = { id: "b1", name: "Mad Mic", city: "NYC", clout_score: 480, record: "7-7", avatar: "M" };
+    if (id.length < 30) {
+        // Assume short ID ba1, ba2 etc. - for this demo we'll use a like or a specific column if we had one
+        // But for now let's just use the full ID if it matches
+        query = query.filter('id::text', 'ilike', `${id}%`);
+    } else {
+        query = query.eq('id', id);
+    }
+
+    const { data: battle, error } = await query.single();
+
+    if (error || !battle) {
+        return <div className="p-24 text-center text-ember font-bebas text-4xl">Battle Not Found</div>;
+    }
+
+    const artistA = battle.artist_a as any;
+    const artistB = battle.artist_b as any;
+    const state = battle.status;
+
+    // 2. Fetch voter status if logged in
+    let hasVotedForId = null;
+    if (clerkId) {
+        const { data: profile } = await supabase.from("users").select("id").eq("clerk_id", clerkId).single();
+        if (profile) {
+            const { data: existingVote } = await supabase
+                .from("votes")
+                .select("voted_for_id")
+                .eq("battle_id", battle.id)
+                .eq("voter_id", profile.id)
+                .single();
+            if (existingVote) hasVotedForId = existingVote.voted_for_id;
+        }
+    }
+
+    // Calculate percentages
+    const totalVotes = (battle.vote_count_a || 0) + (battle.vote_count_b || 0);
+    const results = {
+        a: totalVotes > 0 ? Math.round((battle.vote_count_a / totalVotes) * 100) : 0,
+        b: totalVotes > 0 ? Math.round((battle.vote_count_b / totalVotes) * 100) : 0,
+        total: totalVotes
+    };
 
     return (
         <div className="flex-1 flex flex-col w-full bg-char overflow-hidden">
-
             {/* Header */}
-            <div className="w-full bg-ash border-b border-smoke p-4 flex justify-between items-center">
+            <div className="w-full bg-ash border-b border-smoke p-4 flex justify-between items-center z-50 relative">
                 <div className="flex items-center gap-4">
-                    <span className="px-2 py-1 bg-char border border-smoke text-xs font-barlow-condensed tracking-widest text-smoke uppercase">Written</span>
-                    <h1 className="text-xl font-bebas text-white-app tracking-wide">{artistA.name} VS {artistB.name}</h1>
+                    <span className="px-2 py-1 bg-char border border-smoke text-[10px] font-barlow-condensed tracking-widest text-smoke uppercase">{battle.genre}</span>
+                    <h1 className="text-2xl font-bebas text-white-app tracking-wide uppercase">{artistA.display_name} VS {artistB.display_name}</h1>
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-6">
                     {state === "live" && (
-                        <div className="flex items-center gap-2 text-ember font-barlow-condensed tracking-widest">
-                            <span className="w-2 h-2 bg-ember rounded-full animate-pulse"></span>
-                            LIVE
+                        <div className="flex items-center gap-2 text-ember font-barlow-condensed tracking-widest font-black text-sm">
+                            <span className="w-2 h-2 bg-ember rounded-full animate-ping"></span>
+                            LIVE STREAM
                         </div>
                     )}
-                    <div className="flex items-center gap-2 text-smoke font-barlow text-sm">
-                        <Users className="w-4 h-4" /> 1,240
+                    <div className="flex items-center gap-2 text-smoke font-barlow text-xs font-bold">
+                        <Users className="w-4 h-4 text-heat" /> 1,240 VIEWERS
                     </div>
-                    <button className="text-smoke hover:text-white-app">
-                        <Flag className="w-4 h-4" />
-                    </button>
                 </div>
             </div>
 
-            {state === "live" && <CrowdEnergyBar battleId={id} />}
+            {state === "live" && <CrowdEnergyBar battleId={battle.id} />}
 
-            <div className="flex-1 flex flex-col lg:flex-row h-full">
-                {/* Main Stage (Left Content) */}
-                <div className="flex-1 flex flex-col items-center bg-black relative">
+            <div className="flex-1 flex flex-col lg:flex-row h-full overflow-hidden">
+                {/* Main Stage */}
+                <div className="flex-1 flex flex-col items-center bg-black relative overflow-hidden">
 
+                    {/* States Banners / Overlays */}
                     {state === "upcoming" && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center z-10 p-8">
-                            <h2 className="text-7xl font-bebas text-white-app mb-4 text-center">BATTLE STARTS IN</h2>
-                            <div className="text-9xl font-bebas text-ember drop-shadow-2xl mb-12 tabular-nums">04:15:30</div>
-                            <div className="flex gap-6 w-full max-w-2xl text-center">
-                                <div className="flex-1 bg-ash border border-smoke p-6">
-                                    <h3 className="text-4xl font-bebas text-white-app mb-2">{artistA.name}</h3>
-                                    <p className="text-smoke font-barlow">{artistA.city}</p>
-                                </div>
-                                <div className="flex items-center justify-center text-4xl font-bebas text-smoke">VS</div>
-                                <div className="flex-1 bg-ash border border-smoke p-6">
-                                    <h3 className="text-4xl font-bebas text-white-app mb-2">{artistB.name}</h3>
-                                    <p className="text-smoke font-barlow">{artistB.city}</p>
+                        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center p-8 text-center bg-gradient-to-b from-char/80 to-black">
+                            <div className="mb-8 p-4 bg-char border border-ember/30 backdrop-blur shadow-[0_0_30px_rgba(255,69,0,0.2)]">
+                                <h2 className="text-2xl font-barlow-condensed tracking-[0.4em] uppercase text-ember mb-4 font-black italic">THE CLASH IS IMMINENT</h2>
+                                <div className="text-8xl md:text-9xl font-bebas text-white-app drop-shadow-2xl tabular-nums tracking-widest">
+                                    {format(new Date(battle.scheduled_at), "HH:mm:ss")}
                                 </div>
                             </div>
-                        </div>
-                    )}
-
-                    {state === "voting" && (
-                        <div className="absolute inset-0 bg-char/90 backdrop-blur-sm z-20 flex items-center justify-center p-4">
-                            <VoteUI battleId={id} artistA={artistA} artistB={artistB} endTime={new Date(Date.now() + 2 * 60 * 60 * 1000)} />
-                        </div>
-                    )}
-
-                    {state === "completed" && (
-                        <div className="absolute inset-0 bg-char/90 backdrop-blur-sm z-20 flex flex-col items-center justify-center p-4 animate-fade-in">
-                            <div className="text-center mb-8">
-                                <h2 className="text-8xl font-bebas text-ember mb-2 drop-shadow-[0_0_20px_rgba(255,69,0,0.5)]">FLOWKING WINS</h2>
-                                <p className="text-xl text-white-app font-barlow-condensed tracking-widest uppercase">The vote is final: 68% to 32%</p>
-                            </div>
-                            <div className="flex gap-8">
-                                <Link href={`/artists/${artistA.name}`} className="px-6 py-3 bg-ember text-white-app font-bebas text-xl clip-angled">View Winner Profile</Link>
-                                <Link href={`/artists/${artistB.name}`} className="px-6 py-3 bg-char border border-smoke hover:border-ember text-white-app font-bebas text-xl clip-angled">View Loser Profile</Link>
+                            <div className="flex flex-col sm:flex-row gap-4">
+                                <button
+                                    onClick={() => addToGoogleCalendar({
+                                        id: battle.id,
+                                        artist_a_name: artistA.display_name,
+                                        artist_b_name: artistB.display_name,
+                                        scheduled_at: battle.scheduled_at
+                                    } as any)}
+                                    className="px-8 py-3 bg-char border border-smoke hover:border-ember text-white-app font-bebas text-xl tracking-widest transition-all uppercase flex items-center gap-2"
+                                >
+                                    <Calendar className="w-5 h-5" /> Add to Calendar
+                                </button>
+                                <button className="px-8 py-3 bg-ash border border-smoke hover:border-ember text-white-app font-bebas text-xl tracking-widest transition-all uppercase">
+                                    Download .ICS
+                                </button>
                             </div>
                         </div>
                     )}
 
-                    {/* Video Streams (Mocked for now without actual LiveKit token logic) */}
+                    {(state === "voting" || state === "completed") && (
+                        <div className="absolute bottom-0 left-0 w-full z-40 bg-char/95 backdrop-blur-xl border-t border-ember/30 pb-12">
+                            <VoteUI
+                                battleId={battle.id}
+                                artistA={artistA}
+                                artistB={artistB}
+                                results={results}
+                                votedForId={hasVotedForId}
+                                isCompleted={state === "completed"}
+                            />
+                        </div>
+                    )}
+
+                    {(state === "ghost_a" || state === "ghost_b") && (
+                        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-char/90 backdrop-blur-sm p-4 text-center">
+                            <div className="bg-flame/10 border-2 border-flame p-12 max-w-xl shadow-[0_0_50px_rgba(255,0,0,0.2)]">
+                                <h2 className="text-6xl font-bebas text-flame mb-4 tracking-wide uppercase">⚠️ NO-SHOW DETECTED</h2>
+                                <p className="text-2xl font-bebas text-white-app mb-8">
+                                    {state === "ghost_a" ? artistA.display_name : artistB.display_name} DID NOT SHOW
+                                </p>
+                                <div className="text-xl font-bebas text-ember border-t border-flame/30 pt-4 uppercase">
+                                    {state === "ghost_a" ? artistB.display_name : artistA.display_name} WINS BY DEFAULT
+                                </div>
+                                <p className="mt-4 text-[10px] text-smoke uppercase font-black tracking-widest">
+                                    A permanent no-show penalty has been recorded.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Split View Streams */}
                     <div className="w-full h-full flex flex-col md:flex-row">
-                        <div className="flex-1 relative border-r border-smoke">
-                            {/* Video A Placeholder */}
-                            <div className="absolute inset-0 bg-ash flex items-center justify-center overflow-hidden">
-                                <div className="text-[20rem] font-bebas text-smoke/10 pointer-events-none select-none">{artistA.avatar}</div>
+                        <div className="flex-1 relative border-r border-[#111] overflow-hidden group">
+                            <div className="absolute inset-0 bg-ash/20 flex items-center justify-center">
+                                <Mic2 className="w-64 h-64 text-smoke/5 opacity-10 absolute -rotate-12" />
+                                <div className="text-[20rem] font-bebas text-smoke/5 pointer-events-none select-none italic">{artistA.display_name[0]}</div>
                             </div>
-                            <div className="absolute bottom-4 left-4 px-4 py-2 bg-char/80 backdrop-blur border border-smoke flex flex-col">
-                                <span className="font-bebas text-2xl text-white-app tracking-wide">{artistA.name}</span>
-                                <span className="font-barlow-condensed text-smoke text-sm uppercase tracking-widest">{artistA.record} &bull; {artistA.clout_score} CLOUT</span>
+                            <div className="absolute bottom-6 left-6 p-4 bg-char/80 backdrop-blur border border-smoke shadow-2xl z-20">
+                                <div className="flex items-center gap-3 mb-1">
+                                    <span className="text-3xl font-bebas text-white-app tracking-wide">{artistA.display_name}</span>
+                                    {state === "live" && <span className="px-2 py-0.5 bg-ember text-[8px] font-black italic rounded-sm animate-pulse">LIVE</span>}
+                                </div>
+                                <div className="font-barlow-condensed text-smoke text-[10px] uppercase font-black tracking-[0.2em]">
+                                    {artistA.wins}W - {artistA.losses}L &bull; {artistA.clout_score} CLOUT
+                                </div>
                             </div>
                         </div>
-                        <div className="flex-1 relative">
-                            {/* Video B Placeholder */}
-                            <div className="absolute inset-0 bg-ash flex items-center justify-center overflow-hidden">
-                                <div className="text-[20rem] font-bebas text-smoke/10 pointer-events-none select-none">{artistB.avatar}</div>
+                        <div className="flex-1 relative overflow-hidden group">
+                            <div className="absolute inset-0 bg-ash/20 flex items-center justify-center">
+                                <Mic2 className="w-64 h-64 text-smoke/5 opacity-10 absolute rotate-12" />
+                                <div className="text-[20rem] font-bebas text-smoke/5 pointer-events-none select-none italic">{artistB.display_name[0]}</div>
                             </div>
-                            <div className="absolute bottom-4 right-4 text-right px-4 py-2 bg-char/80 backdrop-blur border border-smoke flex flex-col">
-                                <span className="font-bebas text-2xl text-white-app tracking-wide">{artistB.name}</span>
-                                <span className="font-barlow-condensed text-smoke text-sm uppercase tracking-widest">{artistB.record} &bull; {artistB.clout_score} CLOUT</span>
+                            <div className="absolute bottom-6 right-6 text-right p-4 bg-char/80 backdrop-blur border border-smoke shadow-2xl z-20">
+                                <div className="flex items-center justify-end gap-3 mb-1">
+                                    {state === "live" && <span className="px-2 py-0.5 bg-ember text-[8px] font-black italic rounded-sm animate-pulse">LIVE</span>}
+                                    <span className="text-3xl font-bebas text-white-app tracking-wide">{artistB.display_name}</span>
+                                </div>
+                                <div className="font-barlow-condensed text-smoke text-[10px] uppercase font-black tracking-[0.2em]">
+                                    {artistB.wins}W - {artistB.losses}L &bull; {artistB.clout_score} CLOUT
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Sidebar / Chat */}
-                <div className="w-full lg:w-80 border-l border-smoke bg-ash flex flex-col h-[50vh] lg:h-auto">
+                {/* Sidebar Chat */}
+                <div className="w-full lg:w-96 border-l border-smoke bg-ash flex flex-col h-[50vh] lg:h-auto z-50">
                     <div className="p-4 border-b border-smoke bg-char flex items-center justify-between">
-                        <span className="font-bebas text-xl text-white-app tracking-wide">THE TRENCHES</span>
-                        <span className="text-xs text-smoke font-barlow uppercase"><span className="text-ember">&bull;</span> Live Chat</span>
-                    </div>
-                    <div className="flex-1 p-4 overflow-y-auto flex flex-col gap-3 font-barlow text-sm">
+                        <span className="font-bebas text-2xl text-white-app tracking-widest uppercase italic">The Trenches</span>
                         <div className="flex gap-2">
-                            <span className="font-bold text-ember">nycBoy:</span>
-                            <span className="text-smoke">mad mic bout to catch a body</span>
-                        </div>
-                        <div className="flex gap-2">
-                            <span className="font-bold text-heat">DetroitKing:</span>
-                            <span className="text-smoke">flowking 3-0 easily</span>
-                        </div>
-                        <div className="flex gap-2">
-                            <span className="font-bold text-smoke">admin:</span>
-                            <span className="text-ember font-bold">BATTLE STARTING IN 5 MINUTES.</span>
+                            <div className="w-2 h-2 rounded-full bg-ember animate-ping"></div>
+                            <span className="text-[10px] text-smoke font-black uppercase tracking-widest">Live Flow</span>
                         </div>
                     </div>
-                    <div className="p-4 border-t border-smoke bg-char">
-                        <div className="flex text-smoke font-barlow bg-ash border border-smoke relative">
+                    <div className="flex-1 p-6 overflow-y-auto flex flex-col gap-4 font-barlow text-sm scrollbar-thin scrollbar-thumb-smoke/20">
+                        {state === "upcoming" ? (
+                            <div className="h-full flex flex-col items-center justify-center text-center opacity-30">
+                                <Info className="w-12 h-12 mb-4" />
+                                <p className="font-bebas text-2xl tracking-widest">Chat Locked</p>
+                                <p className="text-[10px] uppercase font-bold tracking-widest">Opens when the heat rises</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                <div className="bg-char/40 p-3 border-l-2 border-ember">
+                                    <span className="font-black text-ember text-[10px] block mb-1 uppercase tracking-tighter">System Alert</span>
+                                    <p className="text-smoke italic text-xs">Battle is live. No gang references. No personal threats. Spitting bars only.</p>
+                                </div>
+                                {/* Mock Messages */}
+                                <div className="flex flex-col gap-1">
+                                    <span className="font-black text-heat text-[10px] uppercase">nyc_beast</span>
+                                    <p className="text-smoke">mad mic came for the crown tonight 😤</p>
+                                </div>
+                                <div className="flex flex-col gap-1">
+                                    <span className="font-black text-ember text-[10px] uppercase">detroit_chef</span>
+                                    <p className="text-smoke">flowking 3-0 zero debate</p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    <div className="p-6 border-t border-smoke bg-char">
+                        <div className="flex text-smoke font-barlow bg-ash/50 border border-smoke p-1 relative overflow-hidden group focus-within:border-ember transition-all">
                             <input
                                 type="text"
-                                disabled={state !== "live"}
-                                placeholder={state !== "live" ? "Chat is locked" : "Send a message..."}
-                                className="w-full bg-transparent p-3 outline-none focus:border-ember disabled:opacity-50"
+                                disabled={state === "upcoming"}
+                                placeholder={state === "upcoming" ? "LOCKED" : "SEND HEAT..."}
+                                className="w-full bg-transparent p-4 outline-none font-bold placeholder:text-smoke/30 italic uppercase text-xs"
                                 maxLength={100}
                             />
                         </div>

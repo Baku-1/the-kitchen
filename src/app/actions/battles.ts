@@ -113,3 +113,37 @@ export async function finalizeChallenge(data: {
     revalidatePath("/dashboard");
     return { success: true };
 }
+
+export async function castVote(battleId: string, artistId: string) {
+    const { userId: clerkId } = await auth();
+    if (!clerkId) throw new Error("Log in to vote 🔥");
+
+    const supabase = createAdminClient();
+
+    // 1. Get current user's DB ID
+    const { data: profile, error: userError } = await supabase
+        .from("users")
+        .select("id")
+        .eq("clerk_id", clerkId)
+        .single();
+
+    if (userError || !profile) throw new Error("Profile not found");
+
+    // 2. Insert the vote
+    // The UNIQUE(battle_id, voter_id) constraint in DB handles double voting
+    const { error: voteError } = await supabase
+        .from("votes")
+        .insert({
+            battle_id: battleId,
+            voter_id: profile.id,
+            voted_for_id: artistId
+        });
+
+    if (voteError) {
+        if (voteError.code === '23505') throw new Error("You already voted on this battle.");
+        throw new Error("Failed to cast vote: " + voteError.message);
+    }
+
+    revalidatePath(`/battles/${battleId}`);
+    return { success: true };
+}

@@ -77,12 +77,10 @@ export default async function LeaderboardPage() {
                                         <div className="flex items-center gap-2 text-xs font-barlow text-smoke mt-1 font-medium uppercase tracking-tighter">
                                             <span>{artist.city}</span> &bull; <span>{artist.wins}W - {artist.losses}L</span>
                                         </div>
+                                        <div className="mt-4 w-48">
+                                            <CloutMeter score={artist.clout_score || 0} tier={tier} compact={true} />
+                                        </div>
                                     </div>
-                                </div>
-
-                                {/* Clout Meter */}
-                                <div className="w-full md:w-64">
-                                    <CloutMeter score={artist.clout_score || 0} tier={tier} />
                                 </div>
 
                                 {/* Action */}

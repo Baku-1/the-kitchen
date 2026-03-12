@@ -26,23 +26,50 @@ export default function TOSContent() {
             <div className="w-full max-w-2xl bg-ash border border-smoke p-8 clip-angled relative">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-ember via-flame to-heat"></div>
 
-                <h1 className="text-4xl text-white-app mb-6 text-center">KNOW THE RULES OF THE HOUSE</h1>
-
-                <div className="bg-char border border-smoke p-6 h-80 overflow-y-auto mb-6 text-sm text-smoke/90 space-y-4 rounded font-barlow">
-                    <p className="text-white-app font-bold mb-2 uppercase text-lg text-ember">Terms of Service & Community Standards</p>
-                    <ul className="list-disc pl-5 space-y-2">
-                        <li>No gang references, affiliations, or coded street language.</li>
-                        <li>No threats of real-world violence against any individual.</li>
-                        <li>Excessive profanity beyond what the battle artistically requires is prohibited.</li>
-                        <li>No hate speech targeting race, gender, sexuality, religion, or nationality.</li>
-                        <li className="text-flame">No-show to a scheduled battle = automatic loss of credibility. The community keeps the score.</li>
-                        <li>Violation = immediate suspension. Second violation = permanent ban with public record.</li>
-                        <li>By battling, you grant The Kitchen a license to clip and share your performance.</li>
-                        <li>The Kitchen&apos;s decisions on rule violations are final.</li>
-                    </ul>
+                <div className="text-center mb-8">
+                    <div className="text-6xl mb-4 animate-bounce">🔥</div>
+                    <h1 className="text-6xl font-bebas text-white-app tracking-wide leading-none mb-2">KNOW THE RULES OF THE HOUSE</h1>
+                    <p className="text-ember font-barlow uppercase tracking-widest font-bold text-sm">Read carefully. This is the only warning.</p>
                 </div>
 
-                <label className="flex items-start gap-4 cursor-pointer mb-8 group">
+                <div className="bg-char border border-smoke p-6 h-96 overflow-y-auto mb-8 text-sm text-smoke/90 space-y-6 rounded-none font-barlow scrollbar-thin scrollbar-thumb-ember">
+                    <div className="space-y-4">
+                        <div className="flex gap-4">
+                            <span className="text-ember font-bold">•</span>
+                            <p>No gang references, affiliations, or coded street language.</p>
+                        </div>
+                        <div className="flex gap-4">
+                            <span className="text-ember font-bold">•</span>
+                            <p>No threats of real-world violence against any individual.</p>
+                        </div>
+                        <div className="flex gap-4">
+                            <span className="text-ember font-bold">•</span>
+                            <p>No excessive profanity beyond what the battle artistically requires.</p>
+                        </div>
+                        <div className="flex gap-4">
+                            <span className="text-ember font-bold">•</span>
+                            <p>No hate speech targeting race, gender, sexuality, religion, or nationality.</p>
+                        </div>
+                        <div className="flex gap-4">
+                            <span className="text-ember font-bold">•</span>
+                            <p className="text-white-app bg-flame/10 px-2">No-show to a scheduled battle = automatic loss. Your record is permanent and public.</p>
+                        </div>
+                        <div className="flex gap-4">
+                            <span className="text-ember font-bold">•</span>
+                            <p>Strike 1: Warning. Strike 2: 30-day suspension. Strike 3: Permanent public ban.</p>
+                        </div>
+                        <div className="flex gap-4">
+                            <span className="text-ember font-bold">•</span>
+                            <p>By battling you grant The Kitchen license to clip and share your performance.</p>
+                        </div>
+                        <div className="flex gap-4">
+                            <span className="text-ember font-bold">•</span>
+                            <p>The Kitchen&apos;s decisions on violations are final.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <label className="flex items-start gap-4 cursor-pointer mb-10 group">
                     <div className="mt-1 relative flex items-center justify-center">
                         <input
                             type="checkbox"
@@ -50,24 +77,28 @@ export default function TOSContent() {
                             checked={accepted}
                             onChange={(e) => setAccepted(e.target.checked)}
                         />
-                        <div className="w-6 h-6 border-2 border-smoke bg-char peer-checked:border-ember peer-checked:bg-ember transition-colors"></div>
+                        <div className="w-6 h-6 border-2 border-smoke bg-char peer-checked:border-ember peer-checked:bg-ember transition-all shadow-[0_0_10px_rgba(255,69,0,0)] peer-checked:shadow-[0_0_15px_rgba(255,69,0,0.4)]"></div>
                         {accepted && (
                             <svg className="absolute w-4 h-4 text-white pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" />
                             </svg>
                         )}
                     </div>
-                    <span className="text-sm text-smoke/80 group-hover:text-white-app transition-colors select-none font-barlow font-medium">
-                        I have read and agree to The Kitchen&apos;s Terms of Service and Community Standards. I understand violations result in account termination and a permanent public record.
+                    <span className="text-xs text-smoke/70 group-hover:text-white-app transition-colors select-none font-barlow font-bold uppercase tracking-tight leading-relaxed">
+                        I have read and agree to The Kitchen&apos;s Terms of Service and Community Standards. I understand violations result in account termination and a permanent public record on my profile.
                     </span>
                 </label>
 
                 <button
                     disabled={!accepted || loading}
                     onClick={handleSubmit}
-                    className="w-full py-4 bg-ember hover:bg-flame disabled:bg-smoke disabled:text-char text-white-app font-bebas text-2xl tracking-wider transition-colors clip-angled"
+                    className="w-full py-6 bg-ember hover:bg-flame disabled:bg-smoke/10 disabled:text-smoke/30 text-white-app font-bebas text-3xl tracking-widest transition-all clip-angled shadow-[0_10px_30px_rgba(255,69,0,0.3)] hover:shadow-[0_15px_40px_rgba(255,69,0,0.5)] active:scale-[0.98]"
                 >
-                    {loading ? "ACCEPTING..." : "ACCEPT & ENTER"}
+                    {loading ? (
+                        <div className="w-8 h-8 border-4 border-white-app border-t-transparent rounded-full animate-spin mx-auto"></div>
+                    ) : (
+                        "I ACCEPT — STEP INTO THE KITCHEN"
+                    )}
                 </button>
             </div>
         </div>

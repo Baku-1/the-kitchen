@@ -132,7 +132,7 @@ export default function Home() {
                   </div>
                   <span className="text-xs text-smoke font-barlow-condensed tracking-widest">{artist.record}</span>
                 </div>
-                <CloutMeter score={artist.score} tier={getCloutTier(artist.score)} />
+                <CloutMeter score={artist.score} tier={getCloutTier(artist.score)} compact={true} />
               </div>
             ))}
           </div>
