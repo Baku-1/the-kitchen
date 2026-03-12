@@ -1,9 +1,9 @@
 "use client";
 
 import { Calendar, Download } from "lucide-react";
-import { BattleMock } from "./BattleCard";
+import { BattleData } from "./BattleCard";
 
-export default function CalendarButtons({ battle }: { battle: BattleMock }) {
+export default function CalendarButtons({ battle }: { battle: BattleData }) {
     const start = new Date(battle.scheduled_at);
     const end = new Date(start.getTime() + 60 * 60 * 1000); // 1 hour duration
 

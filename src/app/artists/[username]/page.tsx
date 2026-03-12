@@ -1,6 +1,6 @@
 import Link from "next/link";
 import CloutMeter from "@/components/ui/CloutMeter";
-import BattleCard, { BattleMock } from "@/components/ui/BattleCard";
+import BattleCard, { BattleData } from "@/components/ui/BattleCard";
 import { getCloutTier } from "@/lib/utils";
 import { MapPin, Trophy, Swords, Share2, Plus, CalendarRange } from "lucide-react";
 
@@ -26,7 +26,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
 
     const tier = getCloutTier(artist.clout_score);
 
-    const upcomingBattles: BattleMock[] = [
+    const upcomingBattles: BattleData[] = [
         {
             id: "ba2",
             artist_a: { username: artist.username, display_name: artist.display_name, record: "23W 4L", clout_score: artist.clout_score },
@@ -38,7 +38,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
         }
     ];
 
-    const pastBattles: BattleMock[] = [
+    const pastBattles: BattleData[] = [
         {
             id: "ba10",
             artist_a: { username: artist.username, display_name: artist.display_name, record: "22W 4L", clout_score: 900 },

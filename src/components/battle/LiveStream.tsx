@@ -6,7 +6,8 @@ import {
     VideoConference,
     RoomAudioRenderer,
     useTracks,
-    VideoTrack
+    VideoTrack,
+    isTrackReference
 } from "@livekit/components-react";
 import "@livekit/components-styles";
 import { Track } from "livekit-client";
@@ -63,7 +64,7 @@ function SplitScreenLayout({ artistA, artistB }: { artistA: string, artistB: str
     // Find Camera tracks
     const tracks = useTracks(
         [
-            { source: Track.Source.Camera, withPlaceholder: true },
+            { source: Track.Source.Camera, withPlaceholder: false },
             { source: Track.Source.ScreenShare, withPlaceholder: false },
         ],
         { onlySubscribed: false },
@@ -77,7 +78,7 @@ function SplitScreenLayout({ artistA, artistB }: { artistA: string, artistB: str
         <div className="w-full h-full flex flex-col md:flex-row bg-black">
             {/* Artist A Side */}
             <div className="flex-1 relative border-b md:border-b-0 md:border-r border-smoke">
-                {trackA ? (
+                {trackA && isTrackReference(trackA) ? (
                     <VideoTrack trackRef={trackA} className="object-cover w-full h-full" />
                 ) : (
                     <div className="absolute inset-0 bg-ash flex items-center justify-center overflow-hidden">
@@ -88,7 +89,7 @@ function SplitScreenLayout({ artistA, artistB }: { artistA: string, artistB: str
 
             {/* Artist B Side */}
             <div className="flex-1 relative">
-                {trackB ? (
+                {trackB && isTrackReference(trackB) ? (
                     <VideoTrack trackRef={trackB} className="object-cover w-full h-full" />
                 ) : (
                     <div className="absolute inset-0 bg-ash flex items-center justify-center overflow-hidden">

@@ -1,10 +1,10 @@
 import Link from "next/link";
-import BattleCard, { BattleMock } from "@/components/ui/BattleCard";
+import BattleCard, { BattleData } from "@/components/ui/BattleCard";
 import CloutMeter from "@/components/ui/CloutMeter";
 import { getCloutTier } from "@/lib/utils";
 import { Mic2, CalendarRange, Cast, Trophy } from "lucide-react";
 
-const MOCK_FEATURED_BATTLE: BattleMock = {
+const MOCK_FEATURED_BATTLE: BattleData = {
   id: "ba1",
   artist_a: { username: "LyricalX", display_name: "LyricalX", record: "23W 4L", clout_score: 920 },
   artist_b: { username: "P_Blaze", display_name: "P-Blaze", record: "18W 9L", clout_score: 764 },
@@ -14,7 +14,7 @@ const MOCK_FEATURED_BATTLE: BattleMock = {
   status: "accepted"
 };
 
-const MOCK_UPCOMING_BATTLES: BattleMock[] = [
+const MOCK_UPCOMING_BATTLES: BattleData[] = [
   {
     id: "ba2",
     artist_a: { username: "FlowKing", display_name: "FlowKing", record: "9W 5L", clout_score: 520 },
