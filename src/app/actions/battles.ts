@@ -162,6 +162,16 @@ export async function sendChatMessage(battleId: string, message: string) {
 
     if (userError || !profile) throw new Error("Profile not found");
 
+    // Check if user is banned from this battle's chat
+    const { data: ban } = await supabase
+        .from("chat_bans")
+        .select("id")
+        .eq("battle_id", battleId)
+        .eq("user_id", profile.id)
+        .single();
+
+    if (ban) throw new Error("You have been banned from this chat by a moderator.");
+
     const { error } = await supabase
         .from("chat_messages")
         .insert({

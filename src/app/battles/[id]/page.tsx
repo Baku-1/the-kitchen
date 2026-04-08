@@ -6,10 +6,13 @@ import BattleChat from "@/components/battles/BattleChat";
 import VoteButton from "@/components/battles/VoteButton";
 import CloutMeter from "@/components/ui/CloutMeter";
 import LiveStream from "@/components/battle/LiveStream";
+import BattleModPanel from "@/components/battle/BattleModPanel";
 import { getCloutTier } from "@/lib/utils";
 import { createAdminClient } from "@/lib/supabase/server";
 import { format } from "date-fns";
 import { addToGoogleCalendar } from "@/lib/calendar";
+
+const ADMIN_IDS = (process.env.ADMIN_CLERK_IDS || "").split(",").map(s => s.trim()).filter(Boolean);
 
 export default async function BattlePage({ params }: { params: { id: string } }) {
     const { id } = await params;
@@ -82,8 +85,20 @@ export default async function BattlePage({ params }: { params: { id: string } })
         .order("created_at", { ascending: true })
         .limit(50);
 
+    const isAdmin = ADMIN_IDS.includes(clerkId || "");
+
     return (
         <div className="flex-1 flex flex-col w-full bg-char overflow-hidden">
+            {/* Admin Moderation Panel */}
+            {isAdmin && (
+                <BattleModPanel
+                    battleId={battle.id}
+                    battleStatus={state}
+                    artistA={{ id: artistA.id, username: artistA.username, display_name: artistA.display_name }}
+                    artistB={{ id: artistB.id, username: artistB.username, display_name: artistB.display_name }}
+                    chatMessages={(initialMessages || []).map((m: any) => ({ ...m, user_id: m.user_id }))}
+                />
+            )}
             {/* Header */}
             <div className="w-full bg-ash border-b border-smoke p-4 flex justify-between items-center z-50 relative">
                 <div className="flex items-center gap-4">

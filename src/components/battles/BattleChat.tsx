@@ -90,7 +90,11 @@ export default function BattleChat({ battleId, initialMessages, isLocked }: Batt
                         {messages.map((m, i) => (
                             <div key={m.id || i} className="flex flex-col gap-1 animate-fade-in">
                                 <span className="font-black text-heat text-[10px] uppercase">{m.user?.username || "Voter"}</span>
-                                <p className="text-smoke">{m.message}</p>
+                                {m.is_flagged ? (
+                                    <p className="text-smoke/30 italic text-xs">[Removed by moderator]</p>
+                                ) : (
+                                    <p className="text-smoke">{m.message}</p>
+                                )}
                             </div>
                         ))}
                     </div>
