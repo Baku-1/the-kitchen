@@ -21,26 +21,27 @@ export default async function BattlesPage() {
         console.error("Error fetching battles:", JSON.stringify(error, null, 2));
     }
 
-    // Map Supabase data to the format expected by BattleCard
-    const formattedBattles = battles?.map(b => ({
-        id: b.id,
-        artist_a: {
+    // Map Supabase data to the full BattleData format required by BattleCard
+    const formattedBattles = (battles || []).map(b => ({
+        ...b,
+        status: b.status as BattleData["status"],
+        artist_a: b.artist_a ? {
+            ...b.artist_a,
             username: b.artist_a.username,
             display_name: b.artist_a.display_name || b.artist_a.username,
-            record: `${b.artist_a.wins}W ${b.artist_a.losses}L`,
+            wins: b.artist_a.wins,
+            losses: b.artist_a.losses,
             clout_score: b.artist_a.clout_score
-        },
-        artist_b: {
+        } : undefined,
+        artist_b: b.artist_b ? {
+            ...b.artist_b,
             username: b.artist_b.username,
             display_name: b.artist_b.display_name || b.artist_b.username,
-            record: `${b.artist_b.wins}W ${b.artist_b.losses}L`,
+            wins: b.artist_b.wins,
+            losses: b.artist_b.losses,
             clout_score: b.artist_b.clout_score
-        },
-        scheduled_at: new Date(b.scheduled_at),
-        genre: b.genre,
-        status: b.status as "pending" | "accepted" | "live" | "voting" | "completed" | "cancelled",
-        title: b.title
-    })) as Partial<BattleData>[] || [];
+        } : undefined
+    })) as BattleData[];
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-12 w-full">
