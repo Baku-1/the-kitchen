@@ -42,6 +42,8 @@ export default async function ArtistProfilePage({ params }: { params: { username
 
     const upcomingBattles = (battles || []).filter(b => b.status === 'accepted' || b.status === 'live');
     const pastBattles = (battles || []).filter(b => b.status === 'completed');
+    const pendingSent = (battles || []).filter(b => b.status === 'pending' && b.challenger_id === artist.id && !b.is_admin_scheduled);
+    const pendingReceived = (battles || []).filter(b => b.status === 'pending' && b.artist_a_id === artist.id && !b.is_admin_scheduled);
 
     const tier = getCloutTier(artist.clout_score);
 
@@ -135,6 +137,26 @@ export default async function ArtistProfilePage({ params }: { params: { username
                             </div>
                         )}
                     </section>
+
+                    {pendingSent.length > 0 && (
+                        <section className="lg:col-span-2 mt-8">
+                            <h2 className="text-3xl font-bebas text-smoke tracking-wide mb-6 flex items-center gap-2">
+                                <AlertCircle className="w-6 h-6 text-smoke" /> CALLOUTS PENDING (SENT)
+                            </h2>
+                            <div className="flex flex-col gap-4">
+                                {pendingSent.map(b => (
+                                    <div key={b.id} className="bg-char border border-smoke/30 p-4 flex justify-between items-center opacity-70">
+                                        <div className="flex items-center gap-4">
+                                            <div className="px-2 py-1 bg-ash border border-smoke/50 text-[10px] font-bebas tracking-widest text-smoke uppercase">
+                                                PENDING ACCEPTANCE
+                                            </div>
+                                            <span className="text-xl font-bebas text-smoke">VS @{b.artist_a.username}</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+                    )}
 
                     <section>
                         <h2 className="text-3xl font-bebas text-white-app tracking-wide mb-6 flex items-center gap-2">

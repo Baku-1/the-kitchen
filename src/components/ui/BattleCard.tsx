@@ -44,7 +44,9 @@ export default function BattleCard({ battle, variant = "row" }: { battle: Battle
                             </span>
                         ) : (
                             <span className="text-sm font-barlow-condensed tracking-widest text-heat uppercase">
-                                {format(battle.scheduled_at, "MMM do, h:mm a")}
+                                {battle.scheduled_at && new Date(battle.scheduled_at).getFullYear() > 2000 
+                                    ? format(new Date(battle.scheduled_at), "MMM do, h:mm a") 
+                                    : "TIME TBD"}
                             </span>
                         )}
                         {battle.title && (
@@ -127,7 +129,9 @@ export default function BattleCard({ battle, variant = "row" }: { battle: Battle
                         </span>
                     ) : (
                         <span className="text-smoke font-barlow-condensed tracking-widest uppercase text-xs">
-                            {format(battle.scheduled_at, "MMM dd, h:mm a")}
+                            {battle.scheduled_at && new Date(battle.scheduled_at).getFullYear() > 2000 
+                                ? format(new Date(battle.scheduled_at), "MMM dd, h:mm a") 
+                                : "TBA"}
                         </span>
                     )}
                 </div>
