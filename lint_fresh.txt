@@ -1,0 +1,139 @@
+﻿
+> the-kitchen@0.1.0 lint
+> eslint
+
+
+C:\Users\jerem\.gemini\antigravity\scratch\the-kitchen\src\app\actions\applications.ts
+  75:36  warning  'err2' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\jerem\.gemini\antigravity\scratch\the-kitchen\src\app\admin\page.tsx
+    6:10  warning  'createAdminClient' is defined but never used                    @typescript-eslint/no-unused-vars
+   12:54  error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+   13:44  error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  117:45  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  117:55  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+C:\Users\jerem\.gemini\antigravity\scratch\the-kitchen\src\app\api\livekit\route.ts
+  36:144  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\jerem\.gemini\antigravity\scratch\the-kitchen\src\app\artists\[username]\page.tsx
+  34:35  warning  'battleError' is assigned a value but never used      @typescript-eslint/no-unused-vars
+  47:11  warning  'pendingReceived' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\jerem\.gemini\antigravity\scratch\the-kitchen\src\app\artists\page.tsx
+  36:27  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  50:71  error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+
+C:\Users\jerem\.gemini\antigravity\scratch\the-kitchen\src\app\auth\page.tsx
+  20:35  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Users\jerem\.gemini\antigravity\scratch\the-kitchen\src\app\battles\page.tsx
+  40:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\jerem\.gemini\antigravity\scratch\the-kitchen\src\app\challenge\page.tsx
+   36:23   error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  141:176  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Users\jerem\.gemini\antigravity\scratch\the-kitchen\src\app\contact\page.tsx
+   3:40   warning  'Globe' is defined but never used                                @typescript-eslint/no-unused-vars
+  60:140  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  60:159  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  60:167  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+C:\Users\jerem\.gemini\antigravity\scratch\the-kitchen\src\app\dashboard\page.tsx
+   5:41  warning  'AlertCircle' is defined but never used             @typescript-eslint/no-unused-vars
+   9:10  warning  'BattleData' is defined but never used              @typescript-eslint/no-unused-vars
+  29:41  warning  'incomingError' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  42:37  warning  'sentError' is assigned a value but never used      @typescript-eslint/no-unused-vars
+  55:43  warning  'upcomingError' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\jerem\.gemini\antigravity\scratch\the-kitchen\src\app\dashboard\set-time\[id]\SetTimeForm.tsx
+  31:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\jerem\.gemini\antigravity\scratch\the-kitchen\src\app\dashboard\set-time\[id]\page.tsx
+   5:21  warning  'Clock' is defined but never used                                @typescript-eslint/no-unused-vars
+   5:28  warning  'Calendar' is defined but never used                             @typescript-eslint/no-unused-vars
+  77:80  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Users\jerem\.gemini\antigravity\scratch\the-kitchen\src\app\for-artists\page.tsx
+  35:23   error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  53:31   error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  90:85   error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  90:97   error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  90:117  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  90:124  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  93:77   error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Users\jerem\.gemini\antigravity\scratch\the-kitchen\src\app\leaderboard\page.tsx
+   3:24  warning  'CloutTier' is defined but never used                                                                                                                                                                                                                                                    @typescript-eslint/no-unused-vars
+  68:45  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Users\jerem\.gemini\antigravity\scratch\the-kitchen\src\app\onboarding\profile\ProfileForm.tsx
+  30:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\jerem\.gemini\antigravity\scratch\the-kitchen\src\app\page.tsx
+  13:9   warning  'now' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+  16:28  error    Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+C:\Users\jerem\.gemini\antigravity\scratch\the-kitchen\src\app\page.tsx:16:28
+  14 |
+  15 |   // 1. Count live battles and tonight's battles (next 12 hours)
+> 16 |   const tonight = new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString();
+     |                            ^^^^^^^^^^ Cannot call impure function
+  17 |
+  18 |   const [{ count: liveCount }, { count: tonightCount }] = await Promise.all([
+  19 |     supabase.from("battles").select("*", { count: "exact", head: true }).eq("status", "live"),  react-hooks/purity
+  48:28  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   @typescript-eslint/no-explicit-any
+
+C:\Users\jerem\.gemini\antigravity\scratch\the-kitchen\src\app\profile\edit\ProfileEditForm.tsx
+  33:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\jerem\.gemini\antigravity\scratch\the-kitchen\src\app\rules\page.tsx
+   1:22   warning  'Flame' is defined but never used                                @typescript-eslint/no-unused-vars
+  25:25   error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  25:199  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  56:78   error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  59:33   error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  59:71   error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  73:115  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  73:123  error    `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  84:101  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Users\jerem\.gemini\antigravity\scratch\the-kitchen\src\components\admin\AdminScheduler.tsx
+   4:10  warning  'Users' is defined but never used         @typescript-eslint/no-unused-vars
+  43:23  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\jerem\.gemini\antigravity\scratch\the-kitchen\src\components\artists\ArtistCard.tsx
+  36:25  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Users\jerem\.gemini\antigravity\scratch\the-kitchen\src\components\battle\BattleModPanel.tsx
+  28:55  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  33:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\jerem\.gemini\antigravity\scratch\the-kitchen\src\components\battles\BattleChat.tsx
+   9:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  14:46  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\jerem\.gemini\antigravity\scratch\the-kitchen\src\components\layout\NotificationsDropdown.tsx
+   11:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   39:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   61:30  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   71:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   82:30  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  117:51  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\jerem\.gemini\antigravity\scratch\the-kitchen\src\components\ui\CrowdEnergyBar.tsx
+  6:42  warning  'battleId' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\jerem\.gemini\antigravity\scratch\the-kitchen\src\components\ui\VoteUI.tsx
+   7:18  warning  'Flame' is defined but never used         @typescript-eslint/no-unused-vars
+  33:23  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\jerem\.gemini\antigravity\scratch\the-kitchen\supabase\functions\ghost-detect\index.ts
+  12:14  warning  '_req' is defined but never used          @typescript-eslint/no-unused-vars
+  41:21  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+Γ£û 69 problems (48 errors, 21 warnings)
+

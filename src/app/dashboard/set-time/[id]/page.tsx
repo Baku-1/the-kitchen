@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Clock, Calendar, Swords, Info } from "lucide-react";
+import { ArrowLeft, Swords, Info } from "lucide-react";
 import SetTimeForm from "@/app/dashboard/set-time/[id]/SetTimeForm";
 
 export default async function SetTimePage({ params }: { params: { id: string } }) {
@@ -74,7 +74,7 @@ export default async function SetTimePage({ params }: { params: { id: string } }
             <div className="p-6 bg-ember/5 border border-ember/20 flex gap-4">
                 <Info className="w-6 h-6 text-ember shrink-0" />
                 <div className="text-sm text-smoke leading-relaxed uppercase tracking-tight">
-                    <p className="font-bold text-white-app mb-1 underline">CHEF'S PREROGATIVE:</p>
+                    <p className="font-bold text-white-app mb-1 underline">CHEF&apos;S PREROGATIVE:</p>
                     As the one being challenged, you hold the power to set the time. Once you LOCK IT IN, the battle is sanctioned. No-shows (from either side) will result in automated clout forfeiture and a permanent mark on your kitchen record.
                 </div>
             </div>

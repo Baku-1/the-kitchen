@@ -25,13 +25,13 @@ export default function BattleModPanel({ battleId, battleStatus, artistA, artist
     const [mutedA, setMutedA] = useState(false);
     const [mutedB, setMutedB] = useState(false);
 
-    const act = async (key: string, fn: () => Promise<any>) => {
+    const act = async (key: string, fn: () => Promise<unknown>) => {
         setLoading(key);
         setError(null);
         try {
             await fn();
-        } catch (e: any) {
-            setError(e.message);
+        } catch (e: unknown) {
+            setError(e instanceof Error ? e.message : "Unknown error");
         } finally {
             setLoading(null);
         }

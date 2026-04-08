@@ -6,9 +6,19 @@ import { supabase } from "@/lib/supabase/client";
 import { acceptAdminBattle } from "@/app/actions/battles";
 import { useRouter } from "next/navigation";
 
+interface Notification {
+    id: string;
+    title: string;
+    body: string;
+    type: string;
+    is_read: boolean;
+    created_at: string;
+    battle_id?: string;
+}
+
 export default function NotificationsDropdown({ userId }: { userId: string | null }) {
     const [open, setOpen] = useState(false);
-    const [notifications, setNotifications] = useState<any[]>([]);
+    const [notifications, setNotifications] = useState<Notification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [working, setWorking] = useState<string | null>(null);
     const router = useRouter();
@@ -18,7 +28,6 @@ export default function NotificationsDropdown({ userId }: { userId: string | nul
         if (!userId) return;
 
         const loadNotifications = async () => {
-            // First we need to get the user's DB ID from their clerk ID
             const { data: profile } = await supabase
                 .from("users")
                 .select("id")
@@ -35,41 +44,40 @@ export default function NotificationsDropdown({ userId }: { userId: string | nul
                 .limit(10);
 
             if (data) {
-                setNotifications(data);
-                setUnreadCount(data.filter((n: any) => !n.is_read).length);
+                setNotifications(data as Notification[]);
+                setUnreadCount(data.filter((n: Notification) => !n.is_read).length);
             }
         };
 
         loadNotifications();
-        
-        // Close dropdown when clicking outside
+
         const handleClickOutside = (event: MouseEvent) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
                 setOpen(false);
             }
         };
-        
+
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, [userId, open]); // Reload when opened too
+    }, [userId, open]);
 
     const handleAccept = async (battleId: string, notificationId: string) => {
         setWorking(notificationId);
         try {
             const res = await acceptAdminBattle(battleId);
-            setNotifications(prev => 
-                prev.map((n: any) => n.id === notificationId ? { ...n, is_read: true } : n)
+            setNotifications(prev =>
+                prev.map((n: Notification) => n.id === notificationId ? { ...n, is_read: true } : n)
             );
             setUnreadCount(prev => Math.max(0, prev - 1));
-            
+
             if (res.bothAccepted) {
                 alert("Battle scheduled! You are locked in.");
                 router.refresh();
             } else {
                 alert("You've accepted! Waiting for the other artist to accept.");
             }
-        } catch (err: any) {
-            alert(err.message);
+        } catch (err: unknown) {
+            alert(err instanceof Error ? err.message : "Something went wrong");
         } finally {
             setWorking(null);
         }
@@ -78,8 +86,8 @@ export default function NotificationsDropdown({ userId }: { userId: string | nul
     const markAsRead = async (id: string) => {
         try {
             await supabase.from("notifications").update({ is_read: true }).eq("id", id);
-            setNotifications(prev => 
-                prev.map((n: any) => n.id === id ? { ...n, is_read: true } : n)
+            setNotifications(prev =>
+                prev.map((n: Notification) => n.id === id ? { ...n, is_read: true } : n)
             );
             setUnreadCount(prev => Math.max(0, prev - 1));
         } catch (err) {
@@ -89,7 +97,7 @@ export default function NotificationsDropdown({ userId }: { userId: string | nul
 
     return (
         <div className="relative" ref={dropdownRef}>
-            <button 
+            <button
                 onClick={() => setOpen(!open)}
                 className="relative p-2 text-smoke hover:text-white-app transition-colors"
             >
@@ -107,16 +115,16 @@ export default function NotificationsDropdown({ userId }: { userId: string | nul
                             <span className="text-[10px] text-smoke uppercase font-black">{unreadCount} UNREAD</span>
                         )}
                     </div>
-                    
+
                     <div className="flex flex-col">
                         {notifications.length === 0 ? (
                             <div className="p-6 text-center text-smoke/50 text-xs italic">
                                 No new notifications. Keep cooking.
                             </div>
                         ) : (
-                            notifications.map((n: any) => (
-                                <div 
-                                    key={n.id} 
+                            notifications.map((n: Notification) => (
+                                <div
+                                    key={n.id}
                                     className={`p-4 border-b border-smoke/10 hover:bg-ash/30 transition-colors ${!n.is_read ? 'bg-ash/10' : 'opacity-70'}`}
                                 >
                                     <div className="flex items-start gap-3">
@@ -126,14 +134,14 @@ export default function NotificationsDropdown({ userId }: { userId: string | nul
                                         <div className="flex-1 min-w-0">
                                             <p className="text-[10px] uppercase font-black tracking-widest text-smoke mb-1">{n.title}</p>
                                             <p className="text-sm font-barlow text-white-app leading-snug">{n.body}</p>
-                                            
+
                                             <div className="mt-2 flex items-center justify-between">
                                                 <span className="text-[9px] text-smoke/50 uppercase tracking-widest">
                                                     {new Date(n.created_at).toLocaleDateString()}
                                                 </span>
-                                                
+
                                                 {!n.is_read && n.type === 'admin_booking' && n.battle_id && (
-                                                    <button 
+                                                    <button
                                                         disabled={working === n.id}
                                                         onClick={() => handleAccept(n.battle_id!, n.id)}
                                                         className="text-[10px] px-2 py-1 bg-ember text-white-app font-black tracking-widest uppercase hover:bg-flame disabled:opacity-50 flex items-center gap-1"
@@ -141,9 +149,9 @@ export default function NotificationsDropdown({ userId }: { userId: string | nul
                                                         {working === n.id ? "WAIT..." : <><CheckSquare className="w-3 h-3" /> ACCEPT</>}
                                                     </button>
                                                 )}
-                                                
+
                                                 {!n.is_read && n.type !== 'admin_booking' && (
-                                                    <button 
+                                                    <button
                                                         onClick={() => markAsRead(n.id)}
                                                         className="text-[10px] text-smoke hover:text-white-app uppercase tracking-widest"
                                                     >

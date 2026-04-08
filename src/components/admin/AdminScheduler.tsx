@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Users, Calendar, Flag, Settings } from "lucide-react";
+import { Calendar, Flag, Settings } from "lucide-react";
 import { scheduleAdminBattle } from "@/app/actions/moderation";
 
 interface Artist {
@@ -40,8 +40,8 @@ export default function AdminScheduler({ artists }: { artists: Artist[] }) {
             setScheduledAt("");
             setGenre("");
             setTitle("");
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : "Unknown error");
         } finally {
             setLoading(false);
         }

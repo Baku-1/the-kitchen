@@ -33,7 +33,7 @@ export default async function ArtistDirectoryPage() {
                 <div className="bg-ember/5 border border-ember/20 p-12 rounded-2xl text-center">
                     <h2 className="text-2xl font-bebas text-ember mb-4 uppercase">CONNECTION ERROR</h2>
                     <p className="text-smoke max-w-md mx-auto mb-6">
-                        We're having trouble connecting to the database. If this is a local environment,
+                        We&apos;re having trouble connecting to the database. If this is a local environment,
                         make sure your Supabase instance is running.
                     </p>
                     <code className="bg-char/50 px-4 py-2 rounded text-xs text-smoke block max-w-sm mx-auto">
@@ -47,7 +47,7 @@ export default async function ArtistDirectoryPage() {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {artists.map((artist) => (
-                        <ArtistCard key={artist.id} artist={artist as any} />
+                        <ArtistCard key={artist.id} artist={artist as import("@/types").UserProfile} />
                     ))}
                 </div>
             )}

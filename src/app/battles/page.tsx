@@ -2,6 +2,7 @@ import Link from "next/link";
 import BattleCard from "@/components/ui/BattleCard";
 import { Search, Filter, AlertTriangle } from "lucide-react";
 import { createAdminClient } from "@/lib/supabase/server";
+import type { BattleData } from "@/types";
 
 export default async function BattlesPage() {
     const supabase = createAdminClient();
@@ -37,9 +38,9 @@ export default async function BattlesPage() {
         },
         scheduled_at: new Date(b.scheduled_at),
         genre: b.genre,
-        status: b.status as any,
+        status: b.status as "pending" | "accepted" | "live" | "voting" | "completed" | "cancelled",
         title: b.title
-    })) || [];
+    })) as Partial<BattleData>[] || [];
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-12 w-full">

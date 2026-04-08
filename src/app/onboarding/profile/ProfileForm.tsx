@@ -27,9 +27,9 @@ export default function ProfileForm({ defaultUsername }: { defaultUsername: stri
             setTimeout(() => {
                 window.location.href = "/";
             }, 500);
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error(err);
-            setError(err.message || "Failed to update profile");
+            setError(err instanceof Error ? err.message : "Failed to update profile");
             setLoading(false);
         }
     };

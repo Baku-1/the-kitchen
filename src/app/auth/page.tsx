@@ -17,7 +17,7 @@ export default async function AuthPage({
                 <div className="text-center mb-8 animate-fade-in">
                     <h1 className="text-8xl font-bebas text-white-app mb-2 tracking-wide drop-shadow-[0_0_15px_rgba(255,69,0,0.3)]">THE KITCHEN</h1>
                     <p className="font-barlow-condensed text-xl text-ember tracking-[0.2em] uppercase font-bold">
-                        If you can't take the heat, get out of the kitchen.
+                        If you can&apos;t take the heat, get out of the kitchen.
                     </p>
                 </div>
 

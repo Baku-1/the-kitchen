@@ -6,23 +6,7 @@ import { cn } from "@/lib/utils";
 import { Calendar, Video } from "lucide-react";
 import { addToGoogleCalendar } from "@/lib/calendar";
 
-export interface ArtistData {
-    username: string;
-    display_name: string;
-    record: string;
-    avatar_url?: string;
-    clout_score: number;
-}
-
-export interface BattleData {
-    id: string;
-    artist_a: ArtistData;
-    artist_b: ArtistData;
-    scheduled_at: Date;
-    genre: string;
-    status: "live" | "accepted" | "completed";
-    title?: string;
-}
+import { BattleData } from "@/types";
 
 export default function BattleCard({ battle, variant = "row" }: { battle: BattleData, variant?: "row" | "featured" }) {
     const isLive = battle.status === "live";
@@ -59,8 +43,8 @@ export default function BattleCard({ battle, variant = "row" }: { battle: Battle
                     <div className="flex items-center justify-center gap-8 w-full max-w-2xl mb-8">
                         <div className="flex-1 flex justify-end text-right">
                             <div>
-                                <h3 className="text-3xl font-bebas text-white-app tracking-wide">{battle.artist_a.display_name}</h3>
-                                <p className="text-smoke font-barlow text-sm uppercase">{battle.artist_a.record}</p>
+                                <h3 className="text-2xl font-bebas text-white-app tracking-wide">{battle.artist_a?.display_name || "TBD"}</h3>
+                                <p className="text-smoke font-barlow text-xs uppercase">{battle.artist_a ? `${battle.artist_a.wins || 0}W - ${battle.artist_a.losses || 0}L` : ""}</p>
                             </div>
                         </div>
 
@@ -68,8 +52,8 @@ export default function BattleCard({ battle, variant = "row" }: { battle: Battle
 
                         <div className="flex-1 flex justify-start text-left">
                             <div>
-                                <h3 className="text-3xl font-bebas text-white-app tracking-wide">{battle.artist_b.display_name}</h3>
-                                <p className="text-smoke font-barlow text-sm uppercase">{battle.artist_b.record}</p>
+                                <h3 className="text-2xl font-bebas text-white-app tracking-wide">{battle.artist_b?.display_name || "TBD"}</h3>
+                                <p className="text-smoke font-barlow text-xs uppercase">{battle.artist_b ? `${battle.artist_b.wins || 0}W - ${battle.artist_b.losses || 0}L` : ""}</p>
                             </div>
                         </div>
                     </div>
@@ -90,19 +74,21 @@ export default function BattleCard({ battle, variant = "row" }: { battle: Battle
                                 >
                                     BATTLE DETAILS
                                 </Link>
-                                <div className="flex">
-                                    <button
-                                        onClick={() => addToGoogleCalendar({
-                                            id: battle.id,
-                                            artist_a_name: battle.artist_a.display_name,
-                                            artist_b_name: battle.artist_b.display_name,
-                                            scheduled_at: battle.scheduled_at
-                                        })}
-                                        className="px-6 py-3 bg-smoke/30 hover:bg-smoke text-smoke hover:text-white-app font-bebas text-xl tracking-wider clip-angled transition-colors flex items-center gap-2"
-                                    >
-                                        <Calendar className="w-5 h-5" /> ADD TO CALENDAR
-                                    </button>
-                                </div>
+                                {battle.scheduled_at && (
+                                    <div className="flex">
+                                        <button
+                                            onClick={() => addToGoogleCalendar({
+                                                id: battle.id,
+                                                artist_a_name: battle.artist_a?.display_name || "TBD",
+                                                artist_b_name: battle.artist_b?.display_name || "TBD",
+                                                scheduled_at: battle.scheduled_at as string
+                                            })}
+                                            className="px-6 py-3 bg-smoke/30 hover:bg-smoke text-smoke hover:text-white-app font-bebas text-xl tracking-wider clip-angled transition-colors flex items-center gap-2"
+                                        >
+                                            <Calendar className="w-5 h-5" /> ADD TO CALENDAR
+                                        </button>
+                                    </div>
+                                )}
                             </>
                         )}
                     </div>
@@ -137,13 +123,23 @@ export default function BattleCard({ battle, variant = "row" }: { battle: Battle
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <span className="text-xl font-bebas tracking-wide w-32 text-right truncate">
-                        {battle.artist_a.display_name}
-                    </span>
-                    <span className="text-xs text-smoke font-bebas opacity-50">VS</span>
-                    <span className="text-xl font-bebas tracking-wide w-32 truncate">
-                        {battle.artist_b.display_name}
-                    </span>
+                    {battle.artist_a ? (
+                        <Link href={`/artists/${battle.artist_a?.username}`} className="text-xl font-bebas text-white-app tracking-wide hover:text-ember transition-colors">
+                            {battle.artist_a?.display_name}
+                        </Link>
+                    ) : (
+                        <span className="text-xl font-bebas text-white-app tracking-wide">TBD</span>
+                    )}
+                </div>
+                <div className="text-lg font-bebas text-smoke opacity-50 px-2">VS</div>
+                <div className="flex items-center gap-4">
+                    {battle.artist_b ? (
+                        <Link href={`/artists/${battle.artist_b?.username}`} className="text-xl font-bebas text-white-app tracking-wide hover:text-ember transition-colors">
+                            {battle.artist_b?.display_name}
+                        </Link>
+                    ) : (
+                        <span className="text-xl font-bebas text-white-app tracking-wide">TBD</span>
+                    )}
                 </div>
             </div>
 

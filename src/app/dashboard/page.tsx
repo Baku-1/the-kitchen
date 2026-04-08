@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Swords, Calendar, Trophy, Zap, AlertCircle, Clock, AlertTriangle } from "lucide-react";
+import { Swords, Calendar, Trophy, Zap, Clock, AlertTriangle } from "lucide-react";
 import CloutMeter from "@/components/ui/CloutMeter";
 import AdminTrigger from "@/components/dashboard/AdminTrigger";
 import { getCloutTier } from "@/lib/utils";
@@ -25,7 +25,7 @@ export default async function DashboardPage() {
     }
 
     // 2. Fetch Incoming Smoke (I am Chef, Status = Pending)
-    const { data: incomingSmoke, error: incomingError } = await supabase
+    const { data: incomingSmoke } = await supabase
         .from("battles")
         .select(`
             id, genre, title, scheduled_at,
@@ -38,7 +38,7 @@ export default async function DashboardPage() {
         .limit(10);
 
     // 3. Fetch Sent Smoke (I am Challenger, Status = Pending)
-    const { data: sentSmoke, error: sentError } = await supabase
+    const { data: sentSmoke } = await supabase
         .from("battles")
         .select(`
             id, genre, title, scheduled_at,
@@ -51,7 +51,7 @@ export default async function DashboardPage() {
         .limit(10);
 
     // 4. Fetch Upcoming Accepted/Live Battles (I am involved)
-    const { data: upcomingBattles, error: upcomingError } = await supabase
+    const { data: upcomingBattles } = await supabase
         .from("battles")
         .select(`
             *,
@@ -115,15 +115,17 @@ export default async function DashboardPage() {
 
                         {incomingSmoke && incomingSmoke.length > 0 ? (
                             <div className="flex flex-col gap-4">
-                                {incomingSmoke.map((c: any) => (
+                                {incomingSmoke.map(c => {
+                                    const challengerObj = (Array.isArray(c.challenger) ? c.challenger[0] : c.challenger) as Partial<import("@/types").UserProfile>;
+                                    return (
                                     <div key={c.id} className="bg-ash border border-smoke p-6 flex flex-col md:flex-row justify-between items-center gap-6 group hover:border-ember/50 transition-colors">
                                         <div className="flex items-center gap-4">
                                             <div className="w-12 h-12 bg-char flex items-center justify-center text-xl font-bebas text-ember">
-                                                {c.challenger?.username[0].toUpperCase()}
+                                                {challengerObj?.username?.[0]?.toUpperCase() || "?"}
                                             </div>
                                             <div>
                                                 <div className="text-white-app font-bebas text-2xl tracking-wide group-hover:text-ember transition-colors">
-                                                    @{c.challenger?.username} <span className="text-smoke italic font-normal text-sm ml-2">WANTS BATTLE</span>
+                                                    @{challengerObj?.username || "TBD"} <span className="text-smoke italic font-normal text-sm ml-2">WANTS BATTLE</span>
                                                 </div>
                                                 <div className="text-smoke text-xs uppercase tracking-widest font-barlow">
                                                     GENRE: {c.genre} | {c.title || "Standard Matchup"}
@@ -138,7 +140,8 @@ export default async function DashboardPage() {
                                             <Clock className="w-5 h-5" /> SET TIME & ACCEPT
                                         </Link>
                                     </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         ) : (
                             <div className="border border-smoke border-dashed p-12 text-center text-smoke font-barlow italic">
@@ -154,7 +157,9 @@ export default async function DashboardPage() {
                                 <AlertTriangle className="w-6 h-6 text-smoke" /> CALLOUTS PENDING (SENT)
                             </h2>
                             <div className="flex flex-col gap-4">
-                                {sentSmoke.map((c: any) => (
+                                {sentSmoke.map(c => {
+                                    const artistObj = (Array.isArray(c.artist_a) ? c.artist_a[0] : c.artist_a) as Partial<import("@/types").UserProfile>;
+                                    return (
                                     <div key={c.id} className="bg-char border border-smoke/30 p-6 flex flex-col md:flex-row justify-between items-center gap-6 opacity-70">
                                         <div className="flex items-center gap-4">
                                             <div className="px-3 py-1 bg-ash border border-smoke/50 text-xs font-bebas tracking-widest text-smoke uppercase">
@@ -162,7 +167,7 @@ export default async function DashboardPage() {
                                             </div>
                                             <div>
                                                 <div className="text-smoke font-bebas text-2xl tracking-wide">
-                                                    VS @{c.artist_a?.username}
+                                                    VS @{artistObj?.username || "TBD"}
                                                 </div>
                                                 <div className="text-smoke/50 text-xs uppercase tracking-widest font-barlow">
                                                     GENRE: {c.genre} | {c.title || "Standard Matchup"}
@@ -170,7 +175,8 @@ export default async function DashboardPage() {
                                             </div>
                                         </div>
                                     </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </section>
                     )}
@@ -182,8 +188,10 @@ export default async function DashboardPage() {
                         </h2>
                         {upcomingBattles && upcomingBattles.length > 0 ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {upcomingBattles.map((u: any) => {
-                                    const opponent = u.artist_a_id === profile.id ? u.artist_b : u.artist_a;
+                                {upcomingBattles.map(u => {
+                                    const artistAObj = (Array.isArray(u.artist_a) ? u.artist_a[0] : u.artist_a) as Partial<import("@/types").UserProfile>;
+                                    const artistBObj = (Array.isArray(u.artist_b) ? u.artist_b[0] : u.artist_b) as Partial<import("@/types").UserProfile>;
+                                    const opponent = u.artist_a_id === profile.id ? artistBObj : artistAObj;
                                     const date = u.scheduled_at ? new Date(u.scheduled_at) : null;
                                     return (
                                         <div key={u.id} className="bg-char border border-smoke p-5 flex flex-col gap-3">

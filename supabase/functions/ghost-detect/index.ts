@@ -9,7 +9,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 // Detects battles where scheduled_at was 15+ minutes ago but status is still
 // 'accepted' (neither artist moved it to 'live'). Marks as no_show so an
 // admin can resolve blame — we do NOT auto-penalize without LiveKit evidence.
-serve(async (_req) => {
+serve(async () => {
     try {
         const limitDate = new Date(Date.now() - 15 * 60 * 1000).toISOString();
 
@@ -38,7 +38,8 @@ serve(async (_req) => {
         return new Response(JSON.stringify({ checked: stale.length }), {
             headers: { "Content-Type": "application/json" }
         });
-    } catch (error: any) {
-        return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    } catch (error: unknown) {
+        const msg = error instanceof Error ? error.message : "Unknown error";
+        return new Response(JSON.stringify({ error: msg }), { status: 500 });
     }
 });

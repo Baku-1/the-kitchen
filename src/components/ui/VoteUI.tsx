@@ -4,7 +4,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { castVote, finishVoting } from "@/app/actions/battles";
 import { useRouter } from "next/navigation";
-import { Trophy, Flame, Info } from "lucide-react";
+import { Trophy, Info } from "lucide-react";
 
 interface VoteUIProps {
     battleId: string;
@@ -30,8 +30,8 @@ export default function VoteUI({ battleId, artistA, artistB, results, votedForId
             await castVote(battleId, artistId);
             setVotedFor(artistId);
             router.refresh();
-        } catch (err: any) {
-            setError(err.message || "Failed to vote");
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : "Failed to vote");
             setLoading(false);
         }
     };

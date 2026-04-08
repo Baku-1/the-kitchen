@@ -28,8 +28,8 @@ export default function SetTimeForm({ battleId }: { battleId: string }) {
 
             router.push("/dashboard");
             router.refresh();
-        } catch (err: any) {
-            setError(err.message || "Failed to schedule battle");
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : "Failed to schedule battle");
             setLoading(false);
         }
     };

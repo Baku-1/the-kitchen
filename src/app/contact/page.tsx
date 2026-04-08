@@ -1,6 +1,6 @@
 "use client";
 
-import { Mail, MessageSquare, Twitter, Globe, Send } from "lucide-react";
+import { Mail, MessageSquare, Twitter, Send } from "lucide-react";
 
 export default function ContactPage() {
     return (
@@ -57,7 +57,7 @@ export default function ContactPage() {
                     <section className="bg-ash border border-smoke p-8">
                         <h3 className="text-2xl font-bebas text-white-app tracking-wide mb-4">HEADQUARTERS</h3>
                         <p className="text-smoke font-barlow leading-relaxed">
-                            The Kitchen is a decentralized platform with its core engineering team operating out of Detroit and NYC. We don't have a physical "Kitchen"—the arena exists wherever you have bars.
+                            The Kitchen is a decentralized platform with its core engineering team operating out of Detroit and NYC. We don&apos;t have a physical &quot;Kitchen&quot;—the arena exists wherever you have bars.
                         </p>
                     </section>
                 </div>

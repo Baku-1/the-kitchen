@@ -30,9 +30,9 @@ export default function ProfileEditForm({ initialData }: ProfileEditFormProps) {
         try {
             await updateProfile(formData);
             setStatus({ type: 'success', message: "Profile updated successfully!" });
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error(err);
-            setStatus({ type: 'error', message: err.message || "Failed to update profile" });
+            setStatus({ type: 'error', message: err instanceof Error ? err.message : "Failed to update profile" });
         } finally {
             setLoading(false);
         }

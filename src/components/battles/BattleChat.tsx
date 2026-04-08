@@ -1,44 +1,32 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Send, Info } from "lucide-react";
-import { supabase } from "@/lib/supabase/client";
-import { sendChatMessage } from "@/app/actions/battles";
+import { Info } from "lucide-react";
+import { useDataChannel } from "@livekit/components-react";
+import { useUser } from "@clerk/nextjs";
+import { ChatMessage } from "@/types";
 
 interface BattleChatProps {
-    battleId: string;
-    initialMessages: any[];
+    initialMessages?: ChatMessage[];
     isLocked: boolean;
 }
 
-export default function BattleChat({ battleId, initialMessages, isLocked }: BattleChatProps) {
-    const [messages, setMessages] = useState(initialMessages);
+export default function BattleChat({ initialMessages, isLocked }: BattleChatProps) {
+    const [messages, setMessages] = useState<ChatMessage[]>(initialMessages || []);
     const [input, setInput] = useState("");
-    const [loading, setLoading] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
+    const { user } = useUser();
 
-    useEffect(() => {
-        const channel = supabase
-            .channel(`battle_messages_${battleId}`)
-            .on(
-                'postgres_changes',
-                {
-                    event: 'INSERT',
-                    schema: 'public',
-                    table: 'chat_messages',
-                    filter: `battle_id=eq.${battleId}`
-                },
-                (payload) => {
-                    // Realtime insert — profile data comes from the DB view/join on next full load
-                    setMessages(prev => [...prev, payload.new]);
-                }
-            )
-            .subscribe();
-
-        return () => {
-            supabase.removeChannel(channel);
-        };
-    }, [battleId]);
+    // Subscribe to LiveKit Data Channel for pure UDP distribution, handling payload natively via callback
+    const { send } = useDataChannel("chat", (msg) => {
+        try {
+            const payloadStr = new TextDecoder().decode(msg.payload);
+            const parsed = JSON.parse(payloadStr);
+            setMessages(prev => [...prev, parsed]);
+        } catch(e) {
+            console.error("Failed to parse chat packet", e);
+        }
+    });
 
     useEffect(() => {
         if (scrollRef.current) {
@@ -48,16 +36,25 @@ export default function BattleChat({ battleId, initialMessages, isLocked }: Batt
 
     const handleSend = async (e?: React.FormEvent) => {
         if (e) e.preventDefault();
-        if (!input.trim() || loading || isLocked) return;
+        if (!input.trim() || isLocked) return;
 
-        setLoading(true);
+        const username = user?.username || user?.firstName || "Spectator";
+        
+        // Construct ultra-light ephemeral payload
+        const packet = JSON.stringify({
+            id: Date.now().toString() + Math.random().toString(36).substring(7),
+            message: input,
+            user: { username }
+        });
+
         try {
-            await sendChatMessage(battleId, input);
+            const encoder = new TextEncoder();
+            send(encoder.encode(packet), { reliable: true });
+            // Optimistic update for sender
+            setMessages(prev => [...prev, JSON.parse(packet)]);
             setInput("");
         } catch (err) {
-            console.error(err);
-        } finally {
-            setLoading(false);
+            console.error("Data channel send failed", err);
         }
     };
 
@@ -106,7 +103,7 @@ export default function BattleChat({ battleId, initialMessages, isLocked }: Batt
                     <div className="flex-1 text-smoke font-barlow bg-ash/50 border border-smoke p-1 relative overflow-hidden group focus-within:border-ember transition-all">
                         <input
                             type="text"
-                            disabled={isLocked || loading}
+                            disabled={isLocked}
                             placeholder={isLocked ? "LOCKED" : "SEND HEAT..."}
                             className="w-full bg-transparent p-4 outline-none font-bold placeholder:text-smoke/30 italic uppercase text-xs"
                             maxLength={100}
@@ -116,10 +113,10 @@ export default function BattleChat({ battleId, initialMessages, isLocked }: Batt
                     </div>
                     <button
                         type="submit"
-                        disabled={isLocked || loading || !input.trim()}
+                        disabled={isLocked || !input.trim()}
                         className="px-6 py-4 bg-ember hover:bg-flame disabled:bg-smoke/20 text-white-app font-bebas text-xl tracking-widest transition-all clip-angled flex items-center gap-2"
                     >
-                        {loading ? "..." : "DROP HEAT"}
+                        {isLocked ? "..." : "DROP HEAT"}
                     </button>
                 </form>
             </div>

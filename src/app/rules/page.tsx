@@ -1,4 +1,4 @@
-import { Zap, Skull, Flame, Mic2, ShieldAlert, Award } from "lucide-react";
+import { Zap, Skull, Mic2, ShieldAlert, Award } from "lucide-react";
 
 export default function RulesPage() {
     return (
@@ -22,7 +22,7 @@ export default function RulesPage() {
                 <section className="text-center max-w-2xl mx-auto">
                     <h2 className="text-3xl font-bebas text-white-app tracking-wide mb-6">THE ART OF THE DISS</h2>
                     <p className="text-lg italic leading-relaxed">
-                        "The Kitchen is where we separate the rappers from the legends. We value wit, wordplay, and delivery over noise and aggression. In this arena, your skill is your only weapon."
+                        &quot;The Kitchen is where we separate the rappers from the legends. We value wit, wordplay, and delivery over noise and aggression. In this arena, your skill is your only weapon.&quot;
                     </p>
                 </section>
 
@@ -53,10 +53,10 @@ export default function RulesPage() {
                         <div>
                             <h3 className="text-3xl font-bebas text-white-app tracking-wide mb-2 uppercase italic">2. Limit Profanity</h3>
                             <p className="text-sm leading-relaxed text-smoke/90">
-                                If you have to curse to be funny or hard, you're in the wrong kitchen.
+                                If you have to curse to be funny or hard, you&apos;re in the wrong kitchen.
                             </p>
                             <p className="text-xs mt-4 italic text-ember">
-                                "Lyrical skill &gt; Excessive cursing."
+                                &quot;Lyrical skill &gt; Excessive cursing.&quot;
                             </p>
                             <p className="text-xs mt-2 text-smoke/70">
                                 We encourage artists to find creative synonyms and complex wordplay to replace basic profanity. Excessive cursing may affect your Clout Score and eligibility for Featured Battles.
@@ -70,7 +70,7 @@ export default function RulesPage() {
                         <div>
                             <h3 className="text-3xl font-bebas text-white-app tracking-wide mb-2 uppercase italic">3. Keep it on the Mic</h3>
                             <p className="text-sm leading-relaxed text-smoke/90">
-                                Real-world threats against an artist or their family are strictly prohibited. The "Kitchen" is a verbal arena—leave the violence outside.
+                                Real-world threats against an artist or their family are strictly prohibited. The &quot;Kitchen&quot; is a verbal arena—leave the violence outside.
                             </p>
                         </div>
                     </div>
@@ -81,7 +81,7 @@ export default function RulesPage() {
                         <div>
                             <h3 className="text-3xl font-bebas text-white-app tracking-wide mb-2 uppercase italic">4. 100% Originality</h3>
                             <p className="text-sm leading-relaxed text-smoke/90">
-                                Biting bars is the ultimate sin. If we find out you used an opponent's old verse or stole from a battle legend, your account will be deleted instantly.
+                                Biting bars is the ultimate sin. If we find out you used an opponent&apos;s old verse or stole from a battle legend, your account will be deleted instantly.
                             </p>
                         </div>
                     </div>

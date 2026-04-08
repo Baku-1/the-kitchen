@@ -1,17 +1,19 @@
 import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
-import { Users, Info, Flag, Calendar, Mic2 } from "lucide-react";
+import { Calendar, Mic2 } from "lucide-react";
 import VoteUI from "@/components/ui/VoteUI";
 import CrowdEnergyBar from "@/components/ui/CrowdEnergyBar";
 import BattleChat from "@/components/battles/BattleChat";
 import VoteButton from "@/components/battles/VoteButton";
 import CloutMeter from "@/components/ui/CloutMeter";
 import LiveStream from "@/components/battle/LiveStream";
+import BattleArenaWrapper from "@/components/battle/BattleArenaWrapper";
 import BattleModPanel from "@/components/battle/BattleModPanel";
 import { getCloutTier } from "@/lib/utils";
 import { createAdminClient } from "@/lib/supabase/server";
 import { format } from "date-fns";
 import { addToGoogleCalendar } from "@/lib/calendar";
+import { UserProfile, ChatMessage } from "@/types";
 
 const ADMIN_IDS = (process.env.ADMIN_CLERK_IDS || "").split(",").map(s => s.trim()).filter(Boolean);
 
@@ -46,8 +48,8 @@ export default async function BattlePage({ params }: { params: { id: string } })
         return <div className="p-24 text-center text-ember font-bebas text-4xl">Battle Not Found</div>;
     }
 
-    const artistA = battle.artist_a as any;
-    const artistB = battle.artist_b as any;
+    const artistA = battle.artist_a as UserProfile;
+    const artistB = battle.artist_b as UserProfile;
     const state = battle.status;
 
     if (state === "pending") {
@@ -105,7 +107,8 @@ export default async function BattlePage({ params }: { params: { id: string } })
     const isAdmin = ADMIN_IDS.includes(clerkId || "");
 
     return (
-        <div className="flex-1 flex flex-col w-full bg-char overflow-hidden">
+        <BattleArenaWrapper battleId={battle.id}>
+            <div className="flex-1 flex flex-col w-full bg-char overflow-hidden">
             {/* Admin Moderation Panel */}
             {isAdmin && (
                 <BattleModPanel
@@ -113,7 +116,7 @@ export default async function BattlePage({ params }: { params: { id: string } })
                     battleStatus={state}
                     artistA={{ id: artistA.id, username: artistA.username, display_name: artistA.display_name }}
                     artistB={{ id: artistB.id, username: artistB.username, display_name: artistB.display_name }}
-                    chatMessages={(initialMessages || []).map((m: any) => ({ ...m, user_id: m.user_id }))}
+                    chatMessages={(initialMessages || []).map((m: ChatMessage) => ({ ...m, user_id: m.user_id, user: m.user ? { username: m.user.username || "Unknown" } : undefined }))}
                 />
             )}
             {/* Header */}
@@ -156,7 +159,7 @@ export default async function BattlePage({ params }: { params: { id: string } })
                                         artist_a_name: artistA.display_name,
                                         artist_b_name: artistB.display_name,
                                         scheduled_at: battle.scheduled_at
-                                    } as any)}
+                                    } as Parameters<typeof addToGoogleCalendar>[0])}
                                     className="px-8 py-3 bg-char border border-smoke hover:border-ember text-white-app font-bebas text-xl tracking-widest transition-all uppercase flex items-center gap-2"
                                 >
                                     <Calendar className="w-5 h-5" /> Add to Calendar
@@ -282,11 +285,11 @@ export default async function BattlePage({ params }: { params: { id: string } })
 
                 {/* Sidebar Chat (Now Client Component) */}
                 <BattleChat
-                    battleId={battle.id}
                     initialMessages={initialMessages || []}
                     isLocked={state === "upcoming"}
                 />
             </div>
-        </div>
+            </div>
+        </BattleArenaWrapper>
     );
 }

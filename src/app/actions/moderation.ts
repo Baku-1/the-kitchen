@@ -85,7 +85,7 @@ export async function setBattleStatus(battleId: string, status: string) {
     const validStatuses = ["pending", "accepted", "live", "voting", "completed", "cancelled"];
     if (!validStatuses.includes(status)) throw new Error(`Invalid status: ${status}`);
 
-    const update: Record<string, any> = { status };
+    const update: Partial<import("@/types").BattleData> = { status: status as import("@/types").BattleData['status'] };
     // When going live, set the livekit_room_name to the battle ID
     if (status === "live") {
         update.livekit_room_name = battleId;

@@ -55,7 +55,7 @@ export async function getUserProfile() {
     const supabase = createAdminClient();
 
     // 1. Try to get user from Supabase
-    let { data: profile, error } = await supabase
+    const { data: profile, error } = await supabase
         .from("users")
         .select("*")
         .eq("clerk_id", userId)

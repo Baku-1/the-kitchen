@@ -3,6 +3,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { BattleData } from "@/types";
 
 export async function sendChallenge(data: {
     opponent_username: string;
@@ -145,7 +146,7 @@ export async function acceptAdminBattle(battleId: string) {
     if (!isArtistA && !isArtistB) throw new Error("You are not participating in this battle");
 
     // 3. Mark the user as having accepted
-    const updateData: Record<string, any> = {};
+    const updateData: Partial<BattleData> = {};
     if (isArtistA) updateData.artist_a_accepted = true;
     if (isArtistB) updateData.artist_b_accepted = true;
 

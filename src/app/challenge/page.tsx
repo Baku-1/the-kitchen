@@ -33,8 +33,8 @@ function ChallengeForm() {
                 title
             });
             setSuccess(true);
-        } catch (err: any) {
-            setError(err.message || "Failed to send challenge");
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : "Failed to send challenge");
         } finally {
             setLoading(false);
         }
@@ -138,7 +138,7 @@ function ChallengeForm() {
                         <Info className="w-6 h-6 text-ember shrink-0 mt-1" />
                         <div className="text-sm leading-relaxed uppercase tracking-tight">
                             <p className="font-bold text-white-app mb-1 font-barlow">THE PROCESS:</p>
-                            Once you issue this challenge, the <span className="text-white-app">Chef</span> must set the <span className="text-ember">Date and Time</span>. You'll then be notified to finalize the contract. No-shows result in automated clout forfeiture.
+                            Once you issue this challenge, the <span className="text-white-app">Chef</span> must set the <span className="text-ember">Date and Time</span>. You&apos;ll then be notified to finalize the contract. No-shows result in automated clout forfeiture.
                         </div>
                     </div>
 

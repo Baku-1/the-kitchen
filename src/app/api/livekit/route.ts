@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
             .from("battles")
             .select("id, artist_a_id, artist_b_id, status")
             .eq("id", room)
-            .single() as any);
+            .single() as unknown as { data: Pick<import("@/types").BattleData, "id" | "artist_a_id" | "artist_b_id" | "status"> | null, error: unknown });
 
         if (battleError || !battle) {
             return NextResponse.json({ error: "Battle not found" }, { status: 404 });
@@ -77,7 +77,7 @@ export async function GET(req: NextRequest) {
         });
 
         return NextResponse.json({ token: await at.toJwt() });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Error generating LiveKit token:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }

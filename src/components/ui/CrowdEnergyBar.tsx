@@ -1,45 +1,31 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import { supabase } from "@/lib/supabase/client";
+import { useEffect, useState } from "react";
+import { useDataChannel } from "@livekit/components-react";
 
-export default function CrowdEnergyBar({ battleId, isCompleted = false }: { battleId: string, isCompleted?: boolean }) {
+export default function CrowdEnergyBar({ isCompleted = false }: { battleId: string, isCompleted?: boolean }) {
     const [energy, setEnergy] = useState(30);
     const [maxEnergy, setMaxEnergy] = useState(30);
-    const decayTimer = useRef<NodeJS.Timeout | null>(null);
+
+    // Increment energy natively via WebRTC data channel callback
+    useDataChannel("chat", (msg) => {
+        if (msg && msg.payload) {
+            setEnergy(prev => {
+                const newEnergy = Math.min(prev + 8, 100);
+                if (newEnergy > maxEnergy) setMaxEnergy(newEnergy);
+                return newEnergy;
+            });
+        }
+    });
 
     useEffect(() => {
-        // Subscribe to real-time chat messages
-        const channel = supabase
-            .channel(`battle_chat_${battleId}`)
-            .on(
-                'postgres_changes',
-                {
-                    event: 'INSERT',
-                    schema: 'public',
-                    table: 'chat_messages',
-                    filter: `battle_id=eq.${battleId}`
-                },
-                () => {
-                    setEnergy(prev => {
-                        const newEnergy = Math.min(prev + 8, 100);
-                        if (newEnergy > maxEnergy) setMaxEnergy(newEnergy);
-                        return newEnergy;
-                    });
-                }
-            )
-            .subscribe();
-
         // Decay logic: slowly drop energy over time
         const interval = setInterval(() => {
             setEnergy(prev => Math.max(prev - 1, 15));
         }, 1000);
 
-        return () => {
-            supabase.removeChannel(channel);
-            clearInterval(interval);
-        };
-    }, [battleId, maxEnergy]);
+        return () => clearInterval(interval);
+    }, []);
 
     return (
         <div className="w-full flex-col bg-char border-b border-t border-smoke">

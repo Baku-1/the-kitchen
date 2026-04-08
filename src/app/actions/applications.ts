@@ -72,7 +72,7 @@ export async function getActiveArtists() {
     
     // Fallback if status doesn't match: if all users are artists.
     // Let's just return all users for now since the artist filtering logic might be different.
-    const { data: allUsers, error: err2 } = await supabase
+    const { data: allUsers } = await supabase
         .from("users")
         .select("id, username, display_name")
         .order("display_name", { ascending: true });

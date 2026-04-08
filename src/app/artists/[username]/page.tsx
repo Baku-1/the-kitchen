@@ -1,6 +1,7 @@
 import Link from "next/link";
 import CloutMeter from "@/components/ui/CloutMeter";
-import BattleCard, { BattleData } from "@/components/ui/BattleCard";
+import BattleCard from "@/components/ui/BattleCard";
+import { BattleData } from "@/types";
 import { getCloutTier } from "@/lib/utils";
 import { MapPin, Trophy, Swords, Share2, CalendarRange, AlertCircle } from "lucide-react";
 import { createAdminClient } from "@/lib/supabase/server";
@@ -22,7 +23,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
                 <div className="text-center">
                     <AlertCircle className="w-16 h-16 text-ember mx-auto mb-4" />
                     <h2 className="text-4xl font-bebas text-white-app mb-2">ARTIST NOT FOUND</h2>
-                    <p className="text-smoke font-barlow">This chef hasn't entered the kitchen yet.</p>
+                    <p className="text-smoke font-barlow">This chef hasn&apos;t entered the kitchen yet.</p>
                     <Link href="/artists" className="inline-block mt-8 text-ember hover:underline font-bebas tracking-widest">BACK TO ROSTER</Link>
                 </div>
             </div>
@@ -30,7 +31,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
     }
 
     // 2. Fetch Battles (Incoming/Outgoing)
-    const { data: battles, error: battleError } = await supabase
+    const { data: battles } = await supabase
         .from("battles")
         .select(`
             *,
@@ -44,6 +45,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
     const pastBattles = (battles || []).filter(b => b.status === 'completed');
     const pendingSent = (battles || []).filter(b => b.status === 'pending' && b.challenger_id === artist.id && !b.is_admin_scheduled);
     const pendingReceived = (battles || []).filter(b => b.status === 'pending' && b.artist_a_id === artist.id && !b.is_admin_scheduled);
+
 
     const tier = getCloutTier(artist.clout_score);
 
@@ -128,7 +130,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
                         {upcomingBattles.length > 0 ? (
                             <div className="flex flex-col gap-4">
                                 {upcomingBattles.map(b => (
-                                    <BattleCard key={b.id} battle={b as any} />
+                                    <BattleCard key={b.id} battle={b as unknown as BattleData} />
                                 ))}
                             </div>
                         ) : (
@@ -165,7 +167,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
                         {pastBattles.length > 0 ? (
                             <div className="flex flex-col gap-4">
                                 {pastBattles.map(b => (
-                                    <BattleCard key={b.id} battle={b as any} />
+                                    <BattleCard key={b.id} battle={b as unknown as BattleData} />
                                 ))}
                             </div>
                         ) : (
@@ -175,7 +177,7 @@ export default async function ArtistProfilePage({ params }: { params: { username
                                 </div>
                                 <h3 className="text-2xl font-bebas text-white-app mb-1 uppercase tracking-wide">No battles yet</h3>
                                 <p className="text-smoke font-barlow mb-8 max-w-[200px] mx-auto uppercase text-xs tracking-tighter">
-                                    This artist hasn't stepped into the kitchen.
+                                    This artist hasn&apos;t stepped into the kitchen.
                                 </p>
                                 <Link
                                     href={`/challenge?to=${artist.username}`}

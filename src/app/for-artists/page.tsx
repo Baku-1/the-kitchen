@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 import { Mic2, ShieldCheck, Video, Globe, Send, UserCheck, CheckCircle, AlertTriangle } from "lucide-react";
 import { submitApplication } from "@/app/actions/applications";
 
@@ -32,8 +33,8 @@ export default function ForArtistsPage() {
                 social_handle: "",
                 bio: ""
             });
-        } catch (err: any) {
-            setStatus({ type: 'error', message: err.message || "Something went wrong." });
+        } catch (err: unknown) {
+            setStatus({ type: 'error', message: err instanceof Error ? err.message : "Something went wrong." });
         } finally {
             setLoading(false);
         }
@@ -50,7 +51,7 @@ export default function ForArtistsPage() {
                         STEP INTO <span className="text-ember">THE LIGHT</span>
                     </h1>
                     <p className="font-barlow-condensed text-2xl text-smoke tracking-[0.2em] uppercase italic max-w-2xl mx-auto">
-                        We don't just host battles. We build legends. Ready to join the roster?
+                        We don&apos;t just host battles. We build legends. Ready to join the roster?
                     </p>
                 </div>
             </div>
@@ -87,10 +88,10 @@ export default function ForArtistsPage() {
                     <section className="p-8 bg-ash border border-smoke">
                         <h3 className="text-2xl font-bebas text-white-app tracking-wide mb-4 uppercase italic">Artist Content Agreement</h3>
                         <div className="text-sm text-smoke/80 font-barlow space-y-4 max-h-60 overflow-y-auto pr-4 custom-scrollbar">
-                            <p>By submitting this application and performing on any "The Kitchen" live stream, you ("Artist") agree to the following:</p>
+                            <p>By submitting this application and performing on any &quot;The Kitchen&quot; live stream, you (&quot;Artist&quot;) agree to the following:</p>
                             <p><strong>1. Usage Rights:</strong> Artist grants The Kitchen a perpetual, irrevocable, worldwide license to use their image, voice, performance, and lyrical content for platform promotion, archives, and social media distribution.</p>
                             <p><strong>2. Conduct Compliance:</strong> Artist agrees to abide by all Community Rules, including the strict ban on gang references and sets. Breach of conduct results in immediate disqualification and clout forfeiture.</p>
-                            <p><strong>3. Exclusivity:</strong> While we don't own your soul, Featured Artists agree not to perform the same specific verses on competing live-stream battle platforms within 30 days of their Kitchen appearance.</p>
+                            <p><strong>3. Exclusivity:</strong> While we don&apos;t own your soul, Featured Artists agree not to perform the same specific verses on competing live-stream battle platforms within 30 days of their Kitchen appearance.</p>
                             <p><strong>4. Verification:</strong> All Artists must undergo a verification process. We reserve the right to reject any application for any reason.</p>
                         </div>
                         <div className="mt-6 flex items-center gap-3">
@@ -223,5 +224,3 @@ export default function ForArtistsPage() {
         </div>
     );
 }
-
-import { cn } from "@/lib/utils";

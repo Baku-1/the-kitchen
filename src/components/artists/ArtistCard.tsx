@@ -1,19 +1,12 @@
 import Link from "next/link";
+import Image from "next/image";
 import { getCloutTier, getTierColor } from "@/lib/utils";
 import { User } from "lucide-react";
 import CloutMeter from "@/components/ui/CloutMeter";
+import { UserProfile } from "@/types";
 
 interface ArtistCardProps {
-    artist: {
-        id: string;
-        username: string;
-        display_name: string | null;
-        city: string | null;
-        country: string | null;
-        genre: string | null;
-        clout_score: number | null;
-        avatar_url: string | null;
-    };
+    artist: UserProfile;
 }
 
 export default function ArtistCard({ artist }: ArtistCardProps) {
@@ -33,7 +26,7 @@ export default function ArtistCard({ artist }: ArtistCardProps) {
                 {/* Avatar Placeholder */}
                 <div className="w-20 h-20 rounded-full bg-char border-2 border-white/10 overflow-hidden flex items-center justify-center flex-shrink-0 group-hover:border-ember/50 transition-colors">
                     {artist.avatar_url ? (
-                        <img src={artist.avatar_url} alt={artist.username} className="w-full h-full object-cover" />
+                        <Image unoptimized width={80} height={80} src={artist.avatar_url} alt={artist.username} className="w-full h-full object-cover" />
                     ) : (
                         <User className="w-10 h-10 text-smoke group-hover:text-ember transition-colors" />
                     )}

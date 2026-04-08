@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
-import BattleCard, { BattleData } from "@/components/ui/BattleCard";
+import BattleCard from "@/components/ui/BattleCard";
+import type { BattleData } from "@/types";
 import CloutMeter from "@/components/ui/CloutMeter";
 import { getCloutTier } from "@/lib/utils";
 import { Mic2, CalendarRange, Cast, Trophy } from "lucide-react";
@@ -10,10 +11,9 @@ export default async function Home() {
   const { userId } = await auth();
   const enterUrl = userId ? "/dashboard" : "/auth";
   const supabase = createAdminClient();
-  const now = new Date().toISOString();
-
   // 1. Count live battles and tonight's battles (next 12 hours)
-  const tonight = new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString();
+  const now = new Date().toISOString();
+  const tonight = new Date(new Date().getTime() + 12 * 60 * 60 * 1000).toISOString();
 
   const [{ count: liveCount }, { count: tonightCount }] = await Promise.all([
     supabase.from("battles").select("*", { count: "exact", head: true }).eq("status", "live"),
@@ -45,7 +45,16 @@ export default async function Home() {
     .limit(6);
 
   // Format battle data for BattleCard component
-  const formatBattle = (b: any): BattleData => ({
+  interface RawBattle {
+    id: string;
+    artist_a: { username: string; display_name: string; clout_score: number; wins: number; losses: number };
+    artist_b: { username: string; display_name: string; clout_score: number; wins: number; losses: number };
+    scheduled_at: string;
+    genre: string;
+    status: string;
+    title: string;
+  }
+  const formatBattle = (b: RawBattle): BattleData => ({
     id: b.id,
     artist_a: {
       username: b.artist_a.username,

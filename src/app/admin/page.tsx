@@ -3,14 +3,28 @@
 import { useEffect, useState } from "react";
 import { getApplications, updateApplicationStatus, getActiveArtists } from "@/app/actions/applications";
 import AdminScheduler from "@/components/admin/AdminScheduler";
-import { createAdminClient } from "@/lib/supabase/server";
 import { Check, X, ExternalLink, User, Music, MapPin, Globe, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { UserProfile } from "@/types";
+
+interface Application {
+    id: string;
+    stage_name: string;
+    genre: string;
+    location: string;
+    status: string;
+    bio: string;
+    sample_url?: string;
+    social_handle?: string;
+    created_at: string;
+    updated_at?: string;
+    user?: Partial<UserProfile>;
+}
 
 export default function AdminPortal() {
-    const [applications, setApplications] = useState<any[]>([]);
-    const [artists, setArtists] = useState<any[]>([]);
+    const [applications, setApplications] = useState<Application[]>([]);
+    const [artists, setArtists] = useState<Partial<UserProfile>[]>([]);
     const [loading, setLoading] = useState(true);
     const [processingId, setProcessingId] = useState<string | null>(null);
 
@@ -114,7 +128,7 @@ export default function AdminPortal() {
                                         </div>
 
                                         <div className="bg-char/50 p-6 border-l-2 border-smoke/30 italic font-barlow text-smoke leading-relaxed">
-                                            "{app.bio}"
+                                            &quot;{app.bio}&quot;
                                         </div>
 
                                         <div className="flex flex-wrap gap-4">
@@ -155,7 +169,7 @@ export default function AdminPortal() {
                                             <div className="text-center p-4">
                                                 <p className="text-[10px] text-smoke uppercase font-black tracking-widest mb-1">Processed By System</p>
                                                 <p className="text-smoke/50 text-xs font-barlow italic">
-                                                    {format(new Date(app.updated_at), "MMM d, yyyy HH:mm")}
+                                                    {app.updated_at ? format(new Date(app.updated_at), "MMM d, yyyy HH:mm") : "—"}
                                                 </p>
                                             </div>
                                         )}
@@ -168,7 +182,7 @@ export default function AdminPortal() {
                 
                 {/* Admin Scheduling Section */}
                 <div className="mt-12">
-                    <AdminScheduler artists={artists} />
+                    <AdminScheduler artists={artists.filter(a => a.id) as { id: string; username: string; display_name: string; }[]} />
                 </div>
             </div>
         </div>

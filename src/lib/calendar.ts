@@ -2,7 +2,7 @@ export interface CalendarEvent {
     id: string;
     artist_a_name: string;
     artist_b_name: string;
-    scheduled_at: Date;
+    scheduled_at: Date | string;
     title?: string;
 }
 

@@ -1,6 +1,7 @@
 import Link from "next/link";
+import Image from "next/image";
 import CloutMeter from "@/components/ui/CloutMeter";
-import { getCloutTier, CloutTier } from "@/lib/utils";
+import { getCloutTier } from "@/lib/utils";
 import { createAdminClient } from "@/lib/supabase/server";
 import { AlertTriangle } from "lucide-react";
 
@@ -65,7 +66,7 @@ export default async function LeaderboardPage() {
                                 <div className="flex items-center gap-4 flex-1">
                                     <div className="w-16 h-16 bg-char border border-white/10 flex items-center justify-center font-bebas text-2xl text-smoke overflow-hidden">
                                         {artist.avatar_url ? (
-                                            <img src={artist.avatar_url} alt={artist.username} className="w-full h-full object-cover" />
+                                            <Image unoptimized src={artist.avatar_url} alt={artist.username} width={64} height={64} className="w-full h-full object-cover" />
                                         ) : (
                                             artist.display_name?.charAt(0) || artist.username.charAt(0)
                                         )}
