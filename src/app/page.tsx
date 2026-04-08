@@ -45,34 +45,18 @@ export default async function Home() {
     .limit(6);
 
   // Format battle data for BattleCard component
-  interface RawBattle {
-    id: string;
-    artist_a: { username: string; display_name: string; clout_score: number; wins: number; losses: number };
-    artist_b: { username: string; display_name: string; clout_score: number; wins: number; losses: number };
-    scheduled_at: string;
-    genre: string;
-    status: string;
-    title: string;
-  }
-  const formatBattle = (b: RawBattle): BattleData => ({
-    id: b.id,
-    artist_a: {
-      username: b.artist_a.username,
+  const formatBattle = (b: any): BattleData => ({
+    ...b,
+    status: b.status as BattleData["status"],
+    artist_a: b.artist_a ? {
+      ...b.artist_a,
       display_name: b.artist_a.display_name || b.artist_a.username,
-      record: `${b.artist_a.wins}W ${b.artist_a.losses}L`,
-      clout_score: b.artist_a.clout_score,
-    },
-    artist_b: {
-      username: b.artist_b.username,
+    } : undefined,
+    artist_b: b.artist_b ? {
+      ...b.artist_b,
       display_name: b.artist_b.display_name || b.artist_b.username,
-      record: `${b.artist_b.wins}W ${b.artist_b.losses}L`,
-      clout_score: b.artist_b.clout_score,
-    },
-    scheduled_at: new Date(b.scheduled_at),
-    genre: b.genre,
-    status: b.status,
-    title: b.title,
-  });
+    } : undefined,
+  }) as BattleData;
 
   const featured = featuredRaw ? formatBattle(featuredRaw) : null;
   const upcoming = (upcomingRaw || []).map(formatBattle);

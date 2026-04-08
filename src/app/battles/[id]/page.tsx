@@ -48,8 +48,11 @@ export default async function BattlePage({ params }: { params: { id: string } })
         return <div className="p-24 text-center text-ember font-bebas text-4xl">Battle Not Found</div>;
     }
 
-    const artistA = battle.artist_a as UserProfile;
-    const artistB = battle.artist_b as UserProfile;
+    // NO SHORTCUTS: Guarantee display name is a string and handle potentials nulls gracefully.
+    const rawArtistA = battle.artist_a || {};
+    const rawArtistB = battle.artist_b || {};
+    const artistA = { ...rawArtistA, display_name: rawArtistA.display_name || rawArtistA.username || "TBD" } as UserProfile & { display_name: string };
+    const artistB = { ...rawArtistB, display_name: rawArtistB.display_name || rawArtistB.username || "TBD" } as UserProfile & { display_name: string };
     const state = battle.status;
 
     if (state === "pending") {
@@ -149,7 +152,7 @@ export default async function BattlePage({ params }: { params: { id: string } })
                             <div className="mb-8 p-4 bg-char border border-ember/30 backdrop-blur shadow-[0_0_30px_rgba(255,69,0,0.2)]">
                                 <h2 className="text-2xl font-barlow-condensed tracking-[0.4em] uppercase text-ember mb-4 font-black italic">THE CLASH IS IMMINENT</h2>
                                 <div className="text-8xl md:text-9xl font-bebas text-white-app drop-shadow-2xl tabular-nums tracking-widest">
-                                    {format(new Date(battle.scheduled_at), "HH:mm:ss")}
+                                    {battle.scheduled_at ? format(new Date(battle.scheduled_at), "HH:mm:ss") : "TBA"}
                                 </div>
                             </div>
                             <div className="flex flex-col sm:flex-row gap-4">

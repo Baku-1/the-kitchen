@@ -1,18 +1,24 @@
 "use client";
 
 import { Calendar, Download } from "lucide-react";
-import { BattleData } from "./BattleCard";
+import type { BattleData } from "@/types";
 
 export default function CalendarButtons({ battle }: { battle: BattleData }) {
-    const start = new Date(battle.scheduled_at);
+    const start = new Date(battle.scheduled_at || 0);
     const end = new Date(start.getTime() + 60 * 60 * 1000); // 1 hour duration
+
+    // Safe extraction following NO SHORTCUTS paradigm
+    const displayNameA = battle.artist_a?.display_name || battle.artist_a?.username || "TBD";
+    const displayNameB = battle.artist_b?.display_name || battle.artist_b?.username || "TBD";
+    const usernameA = battle.artist_a?.username || "artist_a";
+    const usernameB = battle.artist_b?.username || "artist_b";
 
     // Format YYYYMMDDTHHMMSSZ
     const formatDateForCal = (date: Date) => {
         return date.toISOString().replace(/-|:|\.\d\d\d/g, "");
     };
 
-    const gcalLink = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=🔥+THE+KITCHEN:+${encodeURIComponent(battle.artist_a.display_name)}+vs+${encodeURIComponent(battle.artist_b.display_name)}&dates=${formatDateForCal(start)}/${formatDateForCal(end)}&details=Live+rap+battle+at+thekitchen.gg/battles/${battle.id}+—+Cast+your+vote+after+the+battle!&location=thekitchen.gg`;
+    const gcalLink = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=🔥+THE+KITCHEN:+${encodeURIComponent(displayNameA)}+vs+${encodeURIComponent(displayNameB)}&dates=${formatDateForCal(start)}/${formatDateForCal(end)}&details=Live+rap+battle+at+thekitchen.gg/battles/${battle.id}+—+Cast+your+vote+after+the+battle!&location=thekitchen.gg`;
 
     const downloadICS = () => {
         const icsContent = `BEGIN:VCALENDAR
@@ -23,7 +29,7 @@ UID:${battle.id}@thekitchen.gg
 DTSTAMP:${formatDateForCal(new Date())}
 DTSTART:${formatDateForCal(start)}
 DTEND:${formatDateForCal(end)}
-SUMMARY:🔥 THE KITCHEN: ${battle.artist_a.display_name} vs ${battle.artist_b.display_name}
+SUMMARY:🔥 THE KITCHEN: ${displayNameA} vs ${displayNameB}
 DESCRIPTION:Live P2P rap battle. Watch and vote at thekitchen.gg/battles/${battle.id}
 URL:https://thekitchen.gg/battles/${battle.id}
 BEGIN:VALARM
@@ -38,7 +44,7 @@ END:VCALENDAR`;
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.setAttribute('download', `${battle.artist_a.username}_vs_${battle.artist_b.username}.ics`);
+        link.setAttribute('download', `${usernameA}_vs_${usernameB}.ics`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
