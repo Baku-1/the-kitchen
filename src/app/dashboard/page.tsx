@@ -24,41 +24,44 @@ export default async function DashboardPage() {
         redirect("/onboarding");
     }
 
-    // 2. Fetch Pending Challenges where this user is the "Chef" (artist_a)
-    const { data: challenges, error: challengesError } = await supabase
+    // 2. Fetch Incoming Smoke (I am Chef, Status = Pending)
+    const { data: incomingSmoke, error: incomingError } = await supabase
         .from("battles")
         .select(`
-            *,
-            challenger:artist_b_id (username, display_name, clout_score)
+            id, genre, title, scheduled_at,
+            challenger:challenger_id (username, display_name)
         `)
         .eq("artist_a_id", profile.id)
         .eq("status", "pending")
-        .order("created_at", { ascending: false });
+        .eq("is_admin_scheduled", false)
+        .order("created_at", { ascending: false })
+        .limit(10);
 
-    // 3. Fetch All Relevant Battles (Both as A or B)
-    const { data: allBattles, error: allBattlesError } = await supabase
+    // 3. Fetch Sent Smoke (I am Challenger, Status = Pending)
+    const { data: sentSmoke, error: sentError } = await supabase
+        .from("battles")
+        .select(`
+            id, genre, title, scheduled_at,
+            artist_a:artist_a_id (username, display_name)
+        `)
+        .eq("challenger_id", profile.id)
+        .eq("status", "pending")
+        .eq("is_admin_scheduled", false)
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+    // 4. Fetch Upcoming Accepted/Live Battles (I am involved)
+    const { data: upcomingBattles, error: upcomingError } = await supabase
         .from("battles")
         .select(`
             *,
             artist_a:artist_a_id (username, display_name),
-            artist_b:artist_b_id (username, display_name),
-            challenger:challenger_id (username, display_name)
+            artist_b:artist_b_id (username, display_name)
         `)
         .or(`artist_a_id.eq.${profile.id},artist_b_id.eq.${profile.id}`)
-        .in("status", ["pending", "accepted", "live"])
-        .order("scheduled_at", { ascending: true });
-
-    const incomingSmoke = (allBattles || []).filter((b: any) => 
-        b.status === "pending" && b.artist_a_id === profile.id && !b.is_admin_scheduled
-    );
-
-    const sentSmoke = (allBattles || []).filter((b: any) => 
-        b.status === "pending" && b.challenger_id === profile.id && !b.is_admin_scheduled
-    );
-
-    const upcomingBattles = (allBattles || []).filter((b: any) => 
-        (b.status === "accepted" || b.status === "live")
-    );
+        .in("status", ["accepted", "live"])
+        .order("scheduled_at", { ascending: true })
+        .limit(10);
 
     const tier = getCloutTier(profile.clout_score);
 

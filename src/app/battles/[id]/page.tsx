@@ -1,4 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
+import Link from "next/link";
 import { Users, Info, Flag, Calendar, Mic2 } from "lucide-react";
 import VoteUI from "@/components/ui/VoteUI";
 import CrowdEnergyBar from "@/components/ui/CrowdEnergyBar";
@@ -49,6 +50,22 @@ export default async function BattlePage({ params }: { params: { id: string } })
     const artistB = battle.artist_b as any;
     const state = battle.status;
 
+    if (state === "pending") {
+        return (
+            <div className="flex-1 w-full bg-char min-h-[calc(100vh-64px)] flex flex-col items-center justify-center p-8">
+                <div className="mb-8 p-12 bg-ash border border-smoke/30 shadow-2xl max-w-lg text-center animate-fade-in">
+                    <h2 className="text-4xl font-barlow-condensed tracking-[0.4em] uppercase text-smoke mb-4 font-black">HOLDING PATTERN</h2>
+                    <p className="text-white-app font-barlow text-lg mb-8 leading-relaxed">
+                        The callout has been sent, but the Chef has not set a time. 
+                        This bout is not officially sanctioned until they accept.
+                    </p>
+                    <Link href="/dashboard" className="px-8 py-4 bg-ember hover:bg-flame text-white-app font-bebas text-2xl tracking-widest uppercase transition-colors clip-angled inline-block">
+                        Return to Dashboard
+                    </Link>
+                </div>
+            </div>
+        );
+    }
 
 
     // 2. Fetch voter status if logged in
@@ -124,18 +141,6 @@ export default async function BattlePage({ params }: { params: { id: string } })
                 <div className="flex-1 flex flex-col items-center bg-black relative overflow-hidden">
 
                     {/* States Banners / Overlays */}
-                    {state === "pending" && (
-                        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center p-8 text-center bg-gradient-to-b from-char/80 to-black">
-                            <div className="mb-8 p-6 bg-char border border-smoke/30 backdrop-blur shadow-xl max-w-lg">
-                                <h2 className="text-3xl font-barlow-condensed tracking-[0.4em] uppercase text-smoke mb-4 font-black">HOLDING PATTERN</h2>
-                                <p className="text-white-app font-barlow text-lg">
-                                    The callout has been sent, but the Chef has not set a time. 
-                                    This bout is not officially sanctioned until they accept.
-                                </p>
-                            </div>
-                        </div>
-                    )}
-
                     {state === "upcoming" && (
                         <div className="absolute inset-0 z-30 flex flex-col items-center justify-center p-8 text-center bg-gradient-to-b from-char/80 to-black">
                             <div className="mb-8 p-4 bg-char border border-ember/30 backdrop-blur shadow-[0_0_30px_rgba(255,69,0,0.2)]">
