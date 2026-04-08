@@ -29,9 +29,7 @@ export default function BattleChat({ battleId, initialMessages, isLocked }: Batt
                     filter: `battle_id=eq.${battleId}`
                 },
                 (payload) => {
-                    // Fetch user info for the new message (or include it in broadcast if we used broadcast)
-                    // For now let's just add it and hope the profile exists in some cache or we fetch it
-                    // Actually, simpler: just push a mock until refresh or use a view
+                    // Realtime insert — profile data comes from the DB view/join on next full load
                     setMessages(prev => [...prev, payload.new]);
                 }
             )

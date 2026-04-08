@@ -4,57 +4,80 @@ import BattleCard, { BattleData } from "@/components/ui/BattleCard";
 import CloutMeter from "@/components/ui/CloutMeter";
 import { getCloutTier } from "@/lib/utils";
 import { Mic2, CalendarRange, Cast, Trophy } from "lucide-react";
-
-const MOCK_FEATURED_BATTLE: BattleData = {
-  id: "ba1",
-  artist_a: { username: "LyricalX", display_name: "LyricalX", record: "23W 4L", clout_score: 920 },
-  artist_b: { username: "P_Blaze", display_name: "P-Blaze", record: "18W 9L", clout_score: 764 },
-  scheduled_at: new Date(Date.now() + 4 * 60 * 60 * 1000), // 4 hours from now
-  genre: "freestyle",
-  title: "Main Event",
-  status: "accepted"
-};
-
-const MOCK_UPCOMING_BATTLES: BattleData[] = [
-  {
-    id: "ba2",
-    artist_a: { username: "FlowKing", display_name: "FlowKing", record: "9W 5L", clout_score: 520 },
-    artist_b: { username: "Mad_Mic", display_name: "Mad Mic", record: "7W 7L", clout_score: 480 },
-    scheduled_at: new Date(Date.now() - 30 * 60 * 1000), // Started 30 mins ago
-    genre: "written",
-    status: "live"
-  },
-  {
-    id: "ba3",
-    artist_a: { username: "Queen_Spitt", display_name: "Queen Spitt", record: "15W 3L", clout_score: 810 },
-    artist_b: { username: "NovaMC", display_name: "NovaMC", record: "11W 8L", clout_score: 610 },
-    scheduled_at: new Date(Date.now() + 24 * 60 * 60 * 1000),
-    genre: "melodic",
-    status: "accepted"
-  },
-  {
-    id: "ba4",
-    artist_a: { username: "Redhook", display_name: "Redhook", record: "5W 1L", clout_score: 380 },
-    artist_b: { username: "Cipher9", display_name: "Cipher9", record: "3W 2L", clout_score: 220 },
-    scheduled_at: new Date(Date.now() + 26 * 60 * 60 * 1000),
-    genre: "drill",
-    title: "UK Division",
-    status: "accepted"
-  }
-];
-
-const MOCK_LEADERBOARD = [
-  { rank: 1, name: "LyricalX", score: 920, record: "23-4" },
-  { rank: 2, name: "Queen Spitt", score: 810, record: "15-3" },
-  { rank: 3, name: "P-Blaze", score: 764, record: "18-9" },
-  { rank: 4, name: "NovaMC", score: 610, record: "11-8" },
-  { rank: 5, name: "FlowKing", score: 520, record: "9-5" },
-  { rank: 6, name: "Mad Mic", score: 480, record: "7-7" },
-];
+import { createAdminClient } from "@/lib/supabase/server";
 
 export default async function Home() {
   const { userId } = await auth();
   const enterUrl = userId ? "/dashboard" : "/auth";
+  const supabase = createAdminClient();
+  const now = new Date().toISOString();
+
+  // 1. Count live battles and tonight's battles (next 12 hours)
+  const tonight = new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString();
+
+  const [{ count: liveCount }, { count: tonightCount }] = await Promise.all([
+    supabase.from("battles").select("*", { count: "exact", head: true }).eq("status", "live"),
+    supabase.from("battles").select("*", { count: "exact", head: true }).in("status", ["accepted", "live"]).lte("scheduled_at", tonight),
+  ]);
+
+  // 2. Featured battle: next upcoming accepted battle, or the current live one
+  const { data: featuredRaw } = await supabase
+    .from("battles")
+    .select(`*, artist_a:artist_a_id (username, display_name, clout_score, wins, losses), artist_b:artist_b_id (username, display_name, clout_score, wins, losses)`)
+    .in("status", ["live", "accepted"])
+    .order("scheduled_at", { ascending: true })
+    .limit(1)
+    .single();
+
+  // 3. Upcoming battles (next 5 after featured, any status that's relevant)
+  const { data: upcomingRaw } = await supabase
+    .from("battles")
+    .select(`*, artist_a:artist_a_id (username, display_name, clout_score, wins, losses), artist_b:artist_b_id (username, display_name, clout_score, wins, losses)`)
+    .in("status", ["live", "accepted"])
+    .order("scheduled_at", { ascending: true })
+    .range(1, 5);
+
+  // 4. Leaderboard top 6
+  const { data: leaderboardRaw } = await supabase
+    .from("users")
+    .select("username, display_name, clout_score, wins, losses")
+    .order("clout_score", { ascending: false })
+    .limit(6);
+
+  // Format battle data for BattleCard component
+  const formatBattle = (b: any): BattleData => ({
+    id: b.id,
+    artist_a: {
+      username: b.artist_a.username,
+      display_name: b.artist_a.display_name || b.artist_a.username,
+      record: `${b.artist_a.wins}W ${b.artist_a.losses}L`,
+      clout_score: b.artist_a.clout_score,
+    },
+    artist_b: {
+      username: b.artist_b.username,
+      display_name: b.artist_b.display_name || b.artist_b.username,
+      record: `${b.artist_b.wins}W ${b.artist_b.losses}L`,
+      clout_score: b.artist_b.clout_score,
+    },
+    scheduled_at: new Date(b.scheduled_at),
+    genre: b.genre,
+    status: b.status,
+    title: b.title,
+  });
+
+  const featured = featuredRaw ? formatBattle(featuredRaw) : null;
+  const upcoming = (upcomingRaw || []).map(formatBattle);
+  const leaderboard = (leaderboardRaw || []).map((a, i) => ({
+    rank: i + 1,
+    name: a.display_name || a.username,
+    score: a.clout_score || 0,
+    record: `${a.wins}-${a.losses}`,
+  }));
+
+  const liveBadge = (liveCount || 0) > 0
+    ? `${liveCount} BATTLE${(liveCount || 0) > 1 ? "S" : ""} LIVE NOW`
+    : "NO BATTLES LIVE";
+  const tonightBadge = (tonightCount || 0) > 0 ? ` \u2022 ${tonightCount} TONIGHT` : "";
 
   return (
     <div className="flex-1 w-full bg-char overflow-hidden">
@@ -66,8 +89,8 @@ export default async function Home() {
 
         <div className="z-10 text-center max-w-5xl mx-auto flex flex-col items-center animate-fade-in">
           <div className="inline-flex items-center gap-2 px-4 py-2 border border-ember/50 bg-char/50 text-ember tracking-widest font-barlow-condensed mb-8 backdrop-blur-sm shadow-[0_0_15px_rgba(255,69,0,0.3)]">
-            <span className="w-2 h-2 rounded-full bg-ember animate-ping"></span>
-            1 BATTLE LIVE NOW &bull; 3 TONIGHT
+            {(liveCount || 0) > 0 && <span className="w-2 h-2 rounded-full bg-ember animate-ping"></span>}
+            {liveBadge}{tonightBadge}
           </div>
 
           <h1 className="text-8xl md:text-[10rem] leading-none font-bebas text-transparent bg-clip-text bg-gradient-to-b from-white-app to-smoke tracking-tight mb-4 drop-shadow-2xl">
@@ -99,10 +122,12 @@ export default async function Home() {
       </section>
 
       {/* FEATURED EVENT */}
-      <section className="max-w-7xl mx-auto px-4 py-16">
-        <h2 className="text-4xl font-bebas text-smoke mb-6 tracking-wide">MAIN EVENT <span className="text-ember">TONIGHT</span></h2>
-        <BattleCard battle={MOCK_FEATURED_BATTLE} variant="featured" />
-      </section>
+      {featured && (
+        <section className="max-w-7xl mx-auto px-4 py-16">
+          <h2 className="text-4xl font-bebas text-smoke mb-6 tracking-wide">MAIN EVENT <span className="text-ember">TONIGHT</span></h2>
+          <BattleCard battle={featured} variant="featured" />
+        </section>
+      )}
 
       <div className="max-w-7xl mx-auto px-4 py-16 grid grid-cols-1 lg:grid-cols-3 gap-12">
 
@@ -112,11 +137,17 @@ export default async function Home() {
             <h2 className="text-4xl font-bebas text-white-app tracking-wide">THE SCHEDULE</h2>
             <Link href="/battles" className="text-ember font-barlow-condensed tracking-widest uppercase hover:text-flame">View All &rarr;</Link>
           </div>
-          <div className="flex flex-col gap-4">
-            {MOCK_UPCOMING_BATTLES.map(b => (
-              <BattleCard key={b.id} battle={b} />
-            ))}
-          </div>
+          {upcoming.length > 0 ? (
+            <div className="flex flex-col gap-4">
+              {upcoming.map(b => (
+                <BattleCard key={b.id} battle={b} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-smoke text-center py-16 bg-ash/30 border border-dashed border-white/10">
+              <p className="text-xl uppercase tracking-widest font-bebas">No upcoming battles scheduled.</p>
+            </div>
+          )}
         </section>
 
         {/* LEADERBOARD PREVIEW */}
@@ -126,20 +157,26 @@ export default async function Home() {
             <Link href="/leaderboard" className="text-smoke font-barlow-condensed tracking-widest uppercase hover:text-ember">Full List &rarr;</Link>
           </div>
 
-          <div className="bg-ash border border-smoke p-6 flex flex-col gap-6">
-            {MOCK_LEADERBOARD.map((artist) => (
-              <div key={artist.rank} className="flex flex-col gap-2">
-                <div className="flex items-center justify-between font-barlow">
-                  <div className="flex items-center gap-3">
-                    <span className="text-xl font-bebas text-smoke w-6">#{artist.rank}</span>
-                    <span className="text-lg font-bebas tracking-wide text-white-app">{artist.name}</span>
+          {leaderboard.length > 0 ? (
+            <div className="bg-ash border border-smoke p-6 flex flex-col gap-6">
+              {leaderboard.map((artist) => (
+                <div key={artist.rank} className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between font-barlow">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl font-bebas text-smoke w-6">#{artist.rank}</span>
+                      <span className="text-lg font-bebas tracking-wide text-white-app">{artist.name}</span>
+                    </div>
+                    <span className="text-xs text-smoke font-barlow-condensed tracking-widest">{artist.record}</span>
                   </div>
-                  <span className="text-xs text-smoke font-barlow-condensed tracking-widest">{artist.record}</span>
+                  <CloutMeter score={artist.score} tier={getCloutTier(artist.score)} compact={true} />
                 </div>
-                <CloutMeter score={artist.score} tier={getCloutTier(artist.score)} compact={true} />
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-ash border border-smoke p-6 text-smoke text-center">
+              <p className="font-bebas tracking-widest">NO ARTISTS YET</p>
+            </div>
+          )}
         </section>
       </div>
 

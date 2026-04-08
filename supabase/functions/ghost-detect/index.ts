@@ -6,42 +6,36 @@ const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // CRON JOB: Runs every minute
-serve(async (req) => {
+// Detects battles where scheduled_at was 15+ minutes ago but status is still
+// 'accepted' (neither artist moved it to 'live'). Marks as no_show so an
+// admin can resolve blame — we do NOT auto-penalize without LiveKit evidence.
+serve(async (_req) => {
     try {
-        // Find battles that started over 15 mins ago but aren't 'live' or 'ghost'
         const limitDate = new Date(Date.now() - 15 * 60 * 1000).toISOString();
 
-        // In a real scenario, we'd check LiveKit webhooks or participant records
-        // to see if Artist A or B never joined. For this mock detect:
-        const { data: ghosts, error } = await supabase
+        const { data: stale, error } = await supabase
             .from('battles')
             .select('id, artist_a_id, artist_b_id')
             .eq('status', 'accepted')
             .lt('scheduled_at', limitDate);
 
         if (error) throw error;
-
-        for (const battle of ghosts) {
-            // Mock logic: randomly decide who ghosted, or default to artist_a
-            // Real logic reads the LiveKit api to check active connect traces
-
-            const ghostId = battle.artist_a_id;
-            const winnerId = battle.artist_b_id;
-
-            // Update battle status
-            await supabase.from('battles').update({
-                status: 'ghost_a',
-                winner_id: winnerId
-            }).eq('id', battle.id);
-
-            // Industry reaction: The community keeps them honest.
-            // Clout drops naturally from dodging
-            await supabase.rpc('apply_credibility_drop', { user_id: ghostId });
-            // Opponent gets the default W because they showed up
-            await supabase.rpc('apply_default_win', { user_id: winnerId });
+        if (!stale || stale.length === 0) {
+            return new Response(JSON.stringify({ checked: 0 }), {
+                headers: { "Content-Type": "application/json" }
+            });
         }
 
-        return new Response(JSON.stringify({ checked: ghosts.length }), {
+        for (const battle of stale) {
+            // Mark as no_show — admin resolves who ghosted via the admin portal.
+            // When LiveKit webhooks are wired, this can check participant join
+            // records to auto-determine ghost_a vs ghost_b.
+            await supabase.from('battles').update({
+                status: 'no_show',
+            }).eq('id', battle.id);
+        }
+
+        return new Response(JSON.stringify({ checked: stale.length }), {
             headers: { "Content-Type": "application/json" }
         });
     } catch (error: any) {

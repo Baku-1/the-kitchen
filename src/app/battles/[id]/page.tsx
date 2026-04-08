@@ -15,7 +15,7 @@ export default async function BattlePage({ params }: { params: { id: string } })
     const supabase = createAdminClient();
     const { userId: clerkId } = await auth();
 
-    console.log(`[BattlePage] Loading ${id}...`);
+
 
     // 1. Fetch real battle data
     // Supporting short IDs by checking if it's a UUID or a fragment
@@ -45,7 +45,7 @@ export default async function BattlePage({ params }: { params: { id: string } })
     const artistB = battle.artist_b as any;
     const state = battle.status;
 
-    console.log(`[BattlePage] State: ${state}`, { artistA: artistA?.display_name, artistB: artistB?.display_name });
+
 
     // 2. Fetch voter status if logged in
     let hasVotedForId = null;
@@ -96,9 +96,7 @@ export default async function BattlePage({ params }: { params: { id: string } })
                             LIVE STREAM
                         </div>
                     )}
-                    <div className="flex items-center gap-2 text-smoke font-barlow text-xs font-bold">
-                        <Users className="w-4 h-4 text-heat" /> 1,240 VIEWERS
-                    </div>
+
                 </div>
             </div>
 
