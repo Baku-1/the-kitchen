@@ -13,6 +13,7 @@ export default async function BattlesPage() {
             artist_a:artist_a_id (username, display_name, clout_score, wins, losses),
             artist_b:artist_b_id (username, display_name, clout_score, wins, losses)
         `)
+        .in('status', ['live', 'accepted', 'completed'])
         .order('scheduled_at', { ascending: false });
 
     if (error) {

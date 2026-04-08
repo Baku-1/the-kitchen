@@ -124,6 +124,18 @@ export default async function BattlePage({ params }: { params: { id: string } })
                 <div className="flex-1 flex flex-col items-center bg-black relative overflow-hidden">
 
                     {/* States Banners / Overlays */}
+                    {state === "pending" && (
+                        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center p-8 text-center bg-gradient-to-b from-char/80 to-black">
+                            <div className="mb-8 p-6 bg-char border border-smoke/30 backdrop-blur shadow-xl max-w-lg">
+                                <h2 className="text-3xl font-barlow-condensed tracking-[0.4em] uppercase text-smoke mb-4 font-black">HOLDING PATTERN</h2>
+                                <p className="text-white-app font-barlow text-lg">
+                                    The callout has been sent, but the Chef has not set a time. 
+                                    This bout is not officially sanctioned until they accept.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
                     {state === "upcoming" && (
                         <div className="absolute inset-0 z-30 flex flex-col items-center justify-center p-8 text-center bg-gradient-to-b from-char/80 to-black">
                             <div className="mb-8 p-4 bg-char border border-ember/30 backdrop-blur shadow-[0_0_30px_rgba(255,69,0,0.2)]">

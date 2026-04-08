@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Swords, Calendar, Trophy, Zap, AlertCircle, Clock } from "lucide-react";
+import { Swords, Calendar, Trophy, Zap, AlertCircle, Clock, AlertTriangle } from "lucide-react";
 import CloutMeter from "@/components/ui/CloutMeter";
 import AdminTrigger from "@/components/dashboard/AdminTrigger";
 import { getCloutTier } from "@/lib/utils";
@@ -35,17 +35,30 @@ export default async function DashboardPage() {
         .eq("status", "pending")
         .order("created_at", { ascending: false });
 
-    // 3. Fetch Upcoming Accepted Battles (Both as A or B)
-    const { data: upcoming, error: upcomingError } = await supabase
+    // 3. Fetch All Relevant Battles (Both as A or B)
+    const { data: allBattles, error: allBattlesError } = await supabase
         .from("battles")
         .select(`
             *,
             artist_a:artist_a_id (username, display_name),
-            artist_b:artist_b_id (username, display_name)
+            artist_b:artist_b_id (username, display_name),
+            challenger:challenger_id (username, display_name)
         `)
         .or(`artist_a_id.eq.${profile.id},artist_b_id.eq.${profile.id}`)
-        .eq("status", "accepted")
+        .in("status", ["pending", "accepted", "live"])
         .order("scheduled_at", { ascending: true });
+
+    const incomingSmoke = (allBattles || []).filter((b: any) => 
+        b.status === "pending" && b.artist_a_id === profile.id && !b.is_admin_scheduled
+    );
+
+    const sentSmoke = (allBattles || []).filter((b: any) => 
+        b.status === "pending" && b.challenger_id === profile.id && !b.is_admin_scheduled
+    );
+
+    const upcomingBattles = (allBattles || []).filter((b: any) => 
+        (b.status === "accepted" || b.status === "live")
+    );
 
     const tier = getCloutTier(profile.clout_score);
 
@@ -92,14 +105,14 @@ export default async function DashboardPage() {
                     <section>
                         <h2 className="text-3xl font-bebas text-white-app tracking-wide mb-6 flex items-center gap-3">
                             <Swords className="w-7 h-7 text-ember" /> INCOMING SMOKE
-                            {challenges && challenges.length > 0 && (
-                                <span className="px-2 py-0.5 bg-ember text-white-app text-sm animate-pulse">{challenges.length} NEW</span>
+                            {incomingSmoke && incomingSmoke.length > 0 && (
+                                <span className="px-2 py-0.5 bg-ember text-white-app text-sm animate-pulse">{incomingSmoke.length} NEW</span>
                             )}
                         </h2>
 
-                        {challenges && challenges.length > 0 ? (
+                        {incomingSmoke && incomingSmoke.length > 0 ? (
                             <div className="flex flex-col gap-4">
-                                {challenges.map((c: any) => (
+                                {incomingSmoke.map((c: any) => (
                                     <div key={c.id} className="bg-ash border border-smoke p-6 flex flex-col md:flex-row justify-between items-center gap-6 group hover:border-ember/50 transition-colors">
                                         <div className="flex items-center gap-4">
                                             <div className="w-12 h-12 bg-char flex items-center justify-center text-xl font-bebas text-ember">
@@ -131,14 +144,42 @@ export default async function DashboardPage() {
                         )}
                     </section>
 
+                    {/* Pending Outgoing (CHALLENGER TRACKING) */}
+                    {sentSmoke && sentSmoke.length > 0 && (
+                        <section className="mt-8">
+                            <h2 className="text-3xl font-bebas text-smoke tracking-wide mb-6 flex items-center gap-3">
+                                <AlertTriangle className="w-6 h-6 text-smoke" /> CALLOUTS PENDING (SENT)
+                            </h2>
+                            <div className="flex flex-col gap-4">
+                                {sentSmoke.map((c: any) => (
+                                    <div key={c.id} className="bg-char border border-smoke/30 p-6 flex flex-col md:flex-row justify-between items-center gap-6 opacity-70">
+                                        <div className="flex items-center gap-4">
+                                            <div className="px-3 py-1 bg-ash border border-smoke/50 text-xs font-bebas tracking-widest text-smoke uppercase">
+                                                WAITING ON CHEF
+                                            </div>
+                                            <div>
+                                                <div className="text-smoke font-bebas text-2xl tracking-wide">
+                                                    VS @{c.artist_a?.username}
+                                                </div>
+                                                <div className="text-smoke/50 text-xs uppercase tracking-widest font-barlow">
+                                                    GENRE: {c.genre} | {c.title || "Standard Matchup"}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+                    )}
+
                     {/* Upcoming Battles */}
                     <section>
                         <h2 className="text-3xl font-bebas text-white-app tracking-wide mb-6 flex items-center gap-3">
                             <Calendar className="w-7 h-7 text-smoke" /> THE SCHEDULE
                         </h2>
-                        {upcoming && upcoming.length > 0 ? (
+                        {upcomingBattles && upcomingBattles.length > 0 ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {upcoming.map((u: any) => {
+                                {upcomingBattles.map((u: any) => {
                                     const opponent = u.artist_a_id === profile.id ? u.artist_b : u.artist_a;
                                     const date = u.scheduled_at ? new Date(u.scheduled_at) : null;
                                     return (
