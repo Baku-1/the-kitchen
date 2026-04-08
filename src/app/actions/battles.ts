@@ -114,6 +114,71 @@ export async function finalizeChallenge(data: {
     return { success: true };
 }
 
+export async function acceptAdminBattle(battleId: string) {
+    const { userId: clerkId } = await auth();
+    if (!clerkId) throw new Error("Unauthorized");
+
+    const supabase = createAdminClient();
+
+    // 1. Get current user's DB ID
+    const { data: profile, error: userError } = await supabase
+        .from("users")
+        .select("id, username")
+        .eq("clerk_id", clerkId)
+        .single();
+
+    if (userError || !profile) throw new Error("User not found");
+
+    // 2. Fetch the battle
+    const { data: battle, error: battleFetchError } = await supabase
+        .from("battles")
+        .select("*")
+        .eq("id", battleId)
+        .single();
+
+    if (battleFetchError || !battle) throw new Error("Battle not found");
+    if (!battle.is_admin_scheduled) throw new Error("This is not an admin scheduled battle");
+
+    const isArtistA = battle.artist_a_id === profile.id;
+    const isArtistB = battle.artist_b_id === profile.id;
+
+    if (!isArtistA && !isArtistB) throw new Error("You are not participating in this battle");
+
+    // 3. Mark the user as having accepted
+    const updateData: Record<string, any> = {};
+    if (isArtistA) updateData.artist_a_accepted = true;
+    if (isArtistB) updateData.artist_b_accepted = true;
+
+    // Check if both have now accepted
+    const bothAccepted = 
+        (isArtistA || battle.artist_a_accepted) && 
+        (isArtistB || battle.artist_b_accepted);
+
+    if (bothAccepted) {
+        updateData.status = "accepted";
+    }
+
+    const { error: updateError } = await supabase
+        .from("battles")
+        .update(updateData)
+        .eq("id", battleId);
+
+    if (updateError) throw new Error("Failed to accept battle: " + updateError.message);
+
+    // 4. Mark "admin_booking" notification for this battle as read
+    await supabase
+        .from("notifications")
+        .update({ is_read: true })
+        .eq("user_id", profile.id)
+        .eq("battle_id", battleId)
+        .eq("type", "admin_booking");
+
+    revalidatePath("/dashboard");
+    revalidatePath("/");
+    
+    return { success: true, bothAccepted };
+}
+
 export async function castVote(battleId: string, artistId: string) {
     const { userId: clerkId } = await auth();
     if (!clerkId) throw new Error("Log in to vote 🔥");

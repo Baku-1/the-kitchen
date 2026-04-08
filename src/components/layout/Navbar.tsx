@@ -1,8 +1,11 @@
 import Link from "next/link";
 import { UserButton, Show } from "@clerk/nextjs";
-import { Bell } from "lucide-react";
+import NotificationsDropdown from "@/components/layout/NotificationsDropdown";
+import { auth } from "@clerk/nextjs/server";
 
-export default function Navbar() {
+export default async function Navbar() {
+    const { userId } = await auth();
+
     return (
         <nav className="sticky top-0 z-50 w-full backdrop-blur-md bg-char/80 border-b border-smoke">
             <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
@@ -22,10 +25,7 @@ export default function Navbar() {
 
                 <div className="flex items-center gap-4">
                     <Show when="signed-in">
-                        <button className="text-smoke hover:text-ember transition-colors relative">
-                            <Bell className="w-5 h-5" />
-                            <span className="absolute top-0 right-0 w-2 h-2 bg-ember rounded-full animate-pulse"></span>
-                        </button>
+                        <NotificationsDropdown userId={userId} />
                         <Link
                             href="/dashboard"
                             className="hidden sm:block text-sm font-barlow-condensed tracking-widest uppercase hover:text-ember transition-colors"

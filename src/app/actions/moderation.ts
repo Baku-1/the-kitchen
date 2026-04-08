@@ -15,6 +15,57 @@ async function requireAdmin(): Promise<string> {
     return userId;
 }
 
+export async function scheduleAdminBattle(
+    artistAId: string,
+    artistBId: string,
+    scheduledAt: string,
+    genre: string,
+    title: string
+) {
+    await requireAdmin();
+    const supabase = createAdminClient();
+
+    // 1. Insert battle as pending and marked as admin_scheduled
+    const { data: battle, error: battleError } = await supabase
+        .from("battles")
+        .insert({
+            artist_a_id: artistAId,
+            artist_b_id: artistBId,
+            scheduled_at: scheduledAt,
+            genre,
+            title,
+            status: "pending",
+            is_admin_scheduled: true
+        })
+        .select()
+        .single();
+
+    if (battleError) throw new Error("Failed to create battle: " + battleError.message);
+
+    // 2. Notify both artists
+    const notifications = [
+        {
+            user_id: artistAId,
+            type: "admin_booking",
+            title: "MAIN EVENT BOOKED",
+            body: `Admin booked you for an upcoming clash: ${title}. Please accept.`,
+            battle_id: battle.id
+        },
+        {
+            user_id: artistBId,
+            type: "admin_booking",
+            title: "MAIN EVENT BOOKED",
+            body: `Admin booked you for an upcoming clash: ${title}. Please accept.`,
+            battle_id: battle.id
+        }
+    ];
+
+    await supabase.from("notifications").insert(notifications);
+
+    revalidatePath("/admin");
+    return { success: true };
+}
+
 function getLiveKitClient(): RoomServiceClient {
     const url = process.env.NEXT_PUBLIC_LIVEKIT_URL;
     const key = process.env.LIVEKIT_API_KEY;

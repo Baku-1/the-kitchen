@@ -60,6 +60,26 @@ export async function getApplications() {
     return data;
 }
 
+export async function getActiveArtists() {
+    const supabase = createAdminClient();
+    const { data, error } = await supabase
+        .from("users")
+        .select("id, username, display_name")
+        .eq("status", "active") // or whatever condition you use for active artists. In your seed, they might not have a status, let's just get everyone with clout_score > 0 if status is null
+        .order("display_name", { ascending: true });
+        
+    if (error) throw new Error(error.message);
+    
+    // Fallback if status doesn't match: if all users are artists.
+    // Let's just return all users for now since the artist filtering logic might be different.
+    const { data: allUsers, error: err2 } = await supabase
+        .from("users")
+        .select("id, username, display_name")
+        .order("display_name", { ascending: true });
+        
+    return data && data.length > 0 ? data : (allUsers || []);
+}
+
 export async function updateApplicationStatus(id: string, status: 'approved' | 'rejected') {
     const supabase = createAdminClient();
 

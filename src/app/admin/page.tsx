@@ -1,13 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getApplications, updateApplicationStatus } from "@/app/actions/applications";
+import { getApplications, updateApplicationStatus, getActiveArtists } from "@/app/actions/applications";
+import AdminScheduler from "@/components/admin/AdminScheduler";
+import { createAdminClient } from "@/lib/supabase/server";
 import { Check, X, ExternalLink, User, Music, MapPin, Globe, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 
 export default function AdminPortal() {
     const [applications, setApplications] = useState<any[]>([]);
+    const [artists, setArtists] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [processingId, setProcessingId] = useState<string | null>(null);
 
@@ -16,6 +19,9 @@ export default function AdminPortal() {
         try {
             const data = await getApplications();
             setApplications(data);
+            
+            const artistsData = await getActiveArtists();
+            setArtists(artistsData);
         } catch (err) {
             console.error(err);
         } finally {
@@ -159,6 +165,11 @@ export default function AdminPortal() {
                         ))}
                     </div>
                 )}
+                
+                {/* Admin Scheduling Section */}
+                <div className="mt-12">
+                    <AdminScheduler artists={artists} />
+                </div>
             </div>
         </div>
     );
