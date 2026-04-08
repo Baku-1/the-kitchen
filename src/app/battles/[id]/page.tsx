@@ -5,6 +5,7 @@ import CrowdEnergyBar from "@/components/ui/CrowdEnergyBar";
 import BattleChat from "@/components/battles/BattleChat";
 import VoteButton from "@/components/battles/VoteButton";
 import CloutMeter from "@/components/ui/CloutMeter";
+import LiveStream from "@/components/battle/LiveStream";
 import { getCloutTier } from "@/lib/utils";
 import { createAdminClient } from "@/lib/supabase/server";
 import { format } from "date-fns";
@@ -167,12 +168,26 @@ export default async function BattlePage({ params }: { params: { id: string } })
                     )}
 
                     {/* Split View Streams */}
-                    <div className="w-full min-h-[500px] flex-1 flex flex-col md:flex-row">
-                        <div className="flex-1 relative border-r border-[#111] overflow-hidden group">
-                            <div className="absolute inset-0 bg-ash/20 flex items-center justify-center">
-                                <Mic2 className="w-64 h-64 text-smoke/5 opacity-10 absolute -rotate-12" />
-                                <div className="text-[20rem] font-bebas text-smoke/5 pointer-events-none select-none italic">{artistA.display_name[0]}</div>
+                    <div className="w-full min-h-[500px] flex-1 flex flex-col md:flex-row relative">
+                        {/* LiveKit video layer — shown when battle is live */}
+                        {state === "live" && (
+                            <div className="absolute inset-0 z-0">
+                                <LiveStream
+                                    battleId={battle.id}
+                                    artistAUsername={artistA.username}
+                                    artistBUsername={artistB.username}
+                                />
                             </div>
+                        )}
+
+                        {/* Artist A panel */}
+                        <div className="flex-1 relative border-r border-[#111] overflow-hidden group">
+                            {state !== "live" && (
+                                <div className="absolute inset-0 bg-ash/20 flex items-center justify-center">
+                                    <Mic2 className="w-64 h-64 text-smoke/5 opacity-10 absolute -rotate-12" />
+                                    <div className="text-[20rem] font-bebas text-smoke/5 pointer-events-none select-none italic">{artistA.display_name[0]}</div>
+                                </div>
+                            )}
                             <div className="absolute bottom-6 left-6 p-4 bg-char/80 backdrop-blur border border-smoke shadow-2xl z-20">
                                 <div className="flex items-center gap-3 mb-1">
                                     <span className="text-3xl font-bebas text-white-app tracking-wide">{artistA.display_name}</span>
@@ -197,11 +212,15 @@ export default async function BattlePage({ params }: { params: { id: string } })
                                 </div>
                             )}
                         </div>
+
+                        {/* Artist B panel */}
                         <div className="flex-1 relative overflow-hidden group">
-                            <div className="absolute inset-0 bg-ash/20 flex items-center justify-center">
-                                <Mic2 className="w-64 h-64 text-smoke/5 opacity-10 absolute rotate-12" />
-                                <div className="text-[20rem] font-bebas text-smoke/5 pointer-events-none select-none italic">{artistB.display_name?.[0]}</div>
-                            </div>
+                            {state !== "live" && (
+                                <div className="absolute inset-0 bg-ash/20 flex items-center justify-center">
+                                    <Mic2 className="w-64 h-64 text-smoke/5 opacity-10 absolute rotate-12" />
+                                    <div className="text-[20rem] font-bebas text-smoke/5 pointer-events-none select-none italic">{artistB.display_name?.[0]}</div>
+                                </div>
+                            )}
                             <div className="absolute bottom-6 right-6 text-right p-4 bg-char/80 backdrop-blur border border-smoke shadow-2xl z-20">
                                 <div className="flex items-center justify-end gap-3 mb-1">
                                     {state === "live" && <span className="px-2 py-0.5 bg-ember text-[8px] font-black italic rounded-sm animate-pulse">LIVE</span>}

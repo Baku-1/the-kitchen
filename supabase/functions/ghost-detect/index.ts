@@ -27,11 +27,11 @@ serve(async (_req) => {
         }
 
         for (const battle of stale) {
-            // Mark as no_show — admin resolves who ghosted via the admin portal.
+            // Mark as cancelled — admin reviews stale battles via portal.
             // When LiveKit webhooks are wired, this can check participant join
             // records to auto-determine ghost_a vs ghost_b.
             await supabase.from('battles').update({
-                status: 'no_show',
+                status: 'cancelled',
             }).eq('id', battle.id);
         }
 

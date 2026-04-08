@@ -39,9 +39,16 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ error: "Battle not found" }, { status: 404 });
         }
 
-        // Determine participant permissions
-        const isArtistA = battle.artist_a_id === userId;
-        const isArtistB = battle.artist_b_id === userId;
+        // Determine participant permissions — compare Supabase UUIDs, not Clerk IDs
+        const { data: profile } = await supabase
+            .from("users")
+            .select("id")
+            .eq("clerk_id", userId)
+            .single();
+
+        const supabaseUserId = profile?.id;
+        const isArtistA = battle.artist_a_id === supabaseUserId;
+        const isArtistB = battle.artist_b_id === supabaseUserId;
         const isParticipant = isArtistA || isArtistB;
 
         // If not participant and not live, don't allow viewing
