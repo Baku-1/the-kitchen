@@ -24,8 +24,12 @@ const barlow = Barlow({
   variable: "--font-barlow",
 });
 
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL 
+  ? (process.env.NEXT_PUBLIC_SITE_URL.startsWith('http') ? process.env.NEXT_PUBLIC_SITE_URL : `https://${process.env.NEXT_PUBLIC_SITE_URL}`)
+  : "https://the-kitchen-one.vercel.app";
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://the-kitchen.example.com"),
+  metadataBase: new URL(baseUrl),
   title: {
     default: "The Kitchen | Rap Battle Platform",
     template: "%s | The Kitchen",
@@ -38,7 +42,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://the-kitchen.example.com",
+    url: baseUrl,
     siteName: "The Kitchen",
     title: "The Kitchen | Rap Battle Platform",
     description: "The premium peer-to-peer rap battle platform. Live battles, real clout.",
@@ -48,6 +52,7 @@ export const metadata: Metadata = {
         width: 1200,
         height: 630,
         alt: "The Kitchen - Rap Battle Platform",
+        type: "image/png",
       },
     ],
   },
