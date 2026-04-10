@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import BattleCard from "@/components/ui/BattleCard";
@@ -6,6 +7,11 @@ import CloutMeter from "@/components/ui/CloutMeter";
 import { getCloutTier } from "@/lib/utils";
 import { Mic2, CalendarRange, Cast, Trophy } from "lucide-react";
 import { createAdminClient } from "@/lib/supabase/server";
+
+export const metadata: Metadata = {
+  title: "The Kitchen | Live Peer-to-Peer Rap Battles",
+  description: "The official platform for live rap battles. Challenge artists, build clout, and own the stage. If you can't take the heat, get out of the kitchen.",
+};
 
 export default async function Home() {
   const { userId } = await auth();

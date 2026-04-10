@@ -25,8 +25,42 @@ const barlow = Barlow({
 });
 
 export const metadata: Metadata = {
-  title: "The Kitchen | Rap Battle Platform",
+  metadataBase: new URL("https://the-kitchen.example.com"),
+  title: {
+    default: "The Kitchen | Rap Battle Platform",
+    template: "%s | The Kitchen",
+  },
   description: "If you can't take the heat, get out of the kitchen. Live, scheduled, peer-to-peer rap battle platform.",
+  keywords: ["rap battle", "freestyle", "hip hop", "live stream", "clout", "music competition"],
+  authors: [{ name: "The Kitchen Team" }],
+  creator: "The Kitchen",
+  publisher: "The Kitchen",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://the-kitchen.example.com",
+    siteName: "The Kitchen",
+    title: "The Kitchen | Rap Battle Platform",
+    description: "The premium peer-to-peer rap battle platform. Live battles, real clout.",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "The Kitchen - Rap Battle Platform",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "The Kitchen | Rap Battle Platform",
+    description: "The premium peer-to-peer rap battle platform. Live battles, real clout.",
+    images: ["/og-image.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({

@@ -1,8 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import BattleCard from "@/components/ui/BattleCard";
 import { Search, Filter, AlertTriangle } from "lucide-react";
 import { createAdminClient } from "@/lib/supabase/server";
 import type { BattleData } from "@/types";
+
+export const metadata: Metadata = {
+  title: "Battle Schedule",
+  description: "View the full schedule of live and upcoming rap battles in The Kitchen. Don't miss the next clash.",
+};
 
 export default async function BattlesPage() {
     const supabase = createAdminClient();
